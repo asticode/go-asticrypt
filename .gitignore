@@ -1,0 +1,5 @@
+.DS_Store
+Thumbs.db
+.idea/
+server/local.toml
+server/server
