@@ -50,7 +50,6 @@ func main() {
 		AstilectronOptions: astilectron.Options{
 			AppName: "Astimail",
 		},
-		Debug:          true,
 		Homepage:       "index.html",
 		MessageHandler: handleMessages,
 		// RestoreAssets:  RestoreAssets,

@@ -7,6 +7,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/asticode/go-astilog"
 	"github.com/asticode/go-astimail"
 	"github.com/asticode/go-astitools/template"
@@ -208,7 +209,11 @@ func handleEmailAdd(payload json.RawMessage, u *User) (data interface{}, err err
 		return
 	}
 
-	// TODO Validate email
+	// Validate email
+	if !govalidator.IsEmail(email) {
+		err = errors.Wrap(err, "validating email failed")
+		return
+	}
 
 	// Fetch user based on the email
 	if _, err = storage.UserFetchWithEmail(email); err != nil && err != errNotFound {
