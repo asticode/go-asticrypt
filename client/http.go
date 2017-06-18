@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/asticode/go-astilog"
 	"github.com/asticode/go-astimail"
 	"github.com/pkg/errors"
 )
@@ -13,6 +14,7 @@ import (
 func signup(password string) (err error) {
 	// Generate private key
 	var cltPrvKey *astimail.PrivateKey
+	astilog.Debug("Generating new private key")
 	if cltPrvKey, err = astimail.GeneratePrivateKey(password); err != nil {
 		err = errors.Wrap(err, "generating private key failed")
 		return
@@ -34,10 +36,12 @@ func signup(password string) (err error) {
 
 	// Send request
 	var resp *http.Response
+	astilog.Debugf("Sending %s request to %s", r.Method, r.URL.Path)
 	if resp, err = httpClient.Do(r); err != nil {
 		err = errors.Wrap(err, "sending request failed")
 		return
 	}
+	astilog.Debug("Request done")
 	defer resp.Body.Close()
 
 	// Unmarshal body

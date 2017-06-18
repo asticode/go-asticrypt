@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 
+	"github.com/asticode/go-astilog"
 	"github.com/asticode/go-astimail"
 	"github.com/asticode/go-astitools/string"
 	"github.com/go-sql-driver/mysql"
@@ -64,6 +65,7 @@ func newStorageMySQL(db *sqlx.DB) *storageMySQL {
 
 // EmailCreate creates an email
 func (s *storageMySQL) EmailCreate(email string, u *User) (token string, err error) {
+	astilog.Debug("Creating new email")
 	token = astistring.RandomString(100)
 	_, err = s.db.Exec("INSERT INTO email (addr, user_id, validation_token) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE validation_token = ?", email, u.ID, token, token)
 	return
@@ -71,6 +73,7 @@ func (s *storageMySQL) EmailCreate(email string, u *User) (token string, err err
 
 // EmailFetchWithValidationToken fetches an email based on a validation token
 func (s *storageMySQL) EmailFetchWithValidationToken(token string) (e *Email, err error) {
+	astilog.Debug("Fetching email with validation token")
 	e = &Email{}
 	if err = s.db.Get(e, "SELECT * FROM email WHERE validation_token = ? AND validated_at IS NULL LIMIT 1", token); err == sql.ErrNoRows {
 		err = errNotFound
@@ -80,18 +83,21 @@ func (s *storageMySQL) EmailFetchWithValidationToken(token string) (e *Email, er
 
 // EmailValidate validates an email
 func (s *storageMySQL) EmailValidate(e *Email) (err error) {
+	astilog.Debug("Validating email")
 	_, err = s.db.Exec("UPDATE email SET validated_at = NOW() WHERE id = ?", e.ID)
 	return
 }
 
 // UserCreate creates a user
 func (s *storageMySQL) UserCreate(cltPubKey *astimail.PublicKey, srvPrvKey *astimail.PrivateKey) (err error) {
+	astilog.Debug("Creating new user")
 	_, err = s.db.Exec("INSERT INTO user (client_public_key_hash, client_public_key, server_private_key) VALUES (?, ?, ?)", cltPubKey.Hash(), cltPubKey.String(), srvPrvKey.String())
 	return
 }
 
 // UserFetchWithEmail fetches a user based on an email
 func (s *storageMySQL) UserFetchWithEmail(email string) (u *User, err error) {
+	astilog.Debug("Fetching user with email")
 	u = &User{}
 	if err = s.db.Get(u, "SELECT u.* FROM user u INNER JOIN email e ON u.id = e.user_id WHERE e.addr = ? AND validated_at IS NOT NULL LIMIT 1", email); err == sql.ErrNoRows {
 		err = errNotFound
@@ -101,6 +107,7 @@ func (s *storageMySQL) UserFetchWithEmail(email string) (u *User, err error) {
 
 // UserFetchWithKey fetches a user based on a key
 func (s *storageMySQL) UserFetchWithKey(key *astimail.PublicKey) (u *User, err error) {
+	astilog.Debug("Fetching user with key")
 	u = &User{}
 	if err = s.db.Get(u, "SELECT * FROM user WHERE client_public_key_hash = ? LIMIT 1", key.Hash()); err == sql.ErrNoRows {
 		err = errNotFound
@@ -110,6 +117,7 @@ func (s *storageMySQL) UserFetchWithKey(key *astimail.PublicKey) (u *User, err e
 
 // UserUpdate updates a user
 func (s *storageMySQL) UserUpdate(u *User, cltPubKey *astimail.PublicKey, srvPrvKey *astimail.PrivateKey) (err error) {
+	astilog.Debug("Updating user")
 	_, err = s.db.Exec("UPDATE user SET client_public_key = ?, server_private_key = ? WHERE id = ?", cltPubKey.String(), srvPrvKey.String(), u.ID)
 	return
 }

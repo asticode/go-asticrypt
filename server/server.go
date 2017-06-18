@@ -24,10 +24,10 @@ func serve(addr, pathResources string) (err error) {
 
 	// Build router
 	var r = httprouter.New()
-	r.GET("/", handleHomepage)
-	r.POST("/encrypted", handleEncryptedMessages)
-	r.POST("/users", handleCreateUser)
-	r.GET("/validate_email/:token", handleValidateEmail)
+	r.GET("/", adaptHandler(handleHomepage))
+	r.POST("/encrypted", adaptHandler(handleEncryptedMessages))
+	r.POST("/users", adaptHandler(handleCreateUser))
+	r.GET("/validate_email/:token", adaptHandler(handleValidateEmail))
 	r.ServeFiles("/static/*filepath", http.Dir(filepath.Join(pathResources, "static")))
 
 	// Listen
@@ -40,6 +40,13 @@ func serve(addr, pathResources string) (err error) {
 	return
 }
 
+func adaptHandler(h httprouter.Handle) httprouter.Handle {
+	return func(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		astilog.Debugf("handling %s", r.URL.Path)
+		h(rw, r, p)
+	}
+}
+
 func executeTemplate(rw http.ResponseWriter, name string, data interface{}) {
 	// Check if template exists
 	var t *template.Template
@@ -49,6 +56,7 @@ func executeTemplate(rw http.ResponseWriter, name string, data interface{}) {
 	}
 
 	// Execute template
+	astilog.Debugf("Executing template %s", name)
 	if err := t.Execute(rw, data); err != nil {
 		astilog.Errorf("%s while handling homepage", err)
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -73,6 +81,7 @@ func handleCreateUser(rw http.ResponseWriter, r *http.Request, p httprouter.Para
 	// Generate server private key
 	// TODO Use passphrase?
 	var srvPrvKey *astimail.PrivateKey
+	astilog.Debugf("Generating new private key")
 	if srvPrvKey, err = astimail.GeneratePrivateKey(""); err != nil {
 		astilog.Errorf("%s while generating server private key", err)
 		rw.WriteHeader(http.StatusInternalServerError)
