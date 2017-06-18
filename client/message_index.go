@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
 	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron/bootstrap"
+	"github.com/asticode/go-astilog"
 	"github.com/asticode/go-astimail"
 	"github.com/pkg/errors"
 )
@@ -53,11 +55,26 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 		return
 	}
 
-	// Sign up
-	if err = signup(password); err != nil {
-		err = errors.Wrap(err, "signing up failed")
+	// Generate private key
+	var cltPrvKey *astimail.PrivateKey
+	astilog.Debug("Generating new private key")
+	if cltPrvKey, err = astimail.GeneratePrivateKey(password); err != nil {
+		err = errors.Wrap(err, "generating private key failed")
 		return
 	}
+
+	// Send HTTP request
+	var body astimail.BodyKey
+	if err = sendHTTPRequest(http.MethodPost, "/users", astimail.BodyKey{Key: cltPrvKey.Public()}, &body); err != nil {
+		err = errors.Wrap(err, "sending http request failed")
+		return
+	}
+
+	// Set keys
+	clientPrivateKey = &astimail.PrivateKey{}
+	*clientPrivateKey = *cltPrvKey
+	serverPublicKey = &astimail.PublicKey{}
+	*serverPublicKey = *body.Key
 
 	// Create configuration file
 	var f *os.File

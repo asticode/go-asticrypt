@@ -10,9 +10,9 @@ import (
 
 // Body names
 const (
-	NameEmailCreate = "email.create"
-	NameEmailFetch  = "email.fetch"
-	NameEmailList   = "email.list"
+	NameEmailAdd   = "email.add"
+	NameEmailFetch = "email.fetch"
+	NameEmailList  = "email.list"
 )
 
 // BodyKey is a body containing a key

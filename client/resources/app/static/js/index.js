@@ -18,6 +18,12 @@ var index = {
         astilectron.listen(function(message) {
             asticode.loader.hide();
             switch (message.name) {
+                case "email.added":
+                    index.listenEmailAdded(message);
+                    break;
+                case "email.listed":
+                    index.listenEmailListed(message);
+                    break;
                 case "error":
                     index.listenError(message);
                     break;
@@ -33,6 +39,31 @@ var index = {
             }
         });
     },
+    listenEmailAdded: function(message) {
+        asticode.modaler.hide();
+        asticode.notifier.success(message.payload);
+        index.sendEmailList();
+    },
+    listenEmailListed: function(message) {
+        // Init content
+        let content = `<div class="index-list">
+            <div class="index-button">
+                <button class="btn btn-success" onclick="index.onClickAddEmail()">Add a new email</button>
+            </div>`;
+
+        // Loop through emails
+        for (let i = 0; i < message.payload.length; i++) {
+            content += `<div class="index-item">
+                ` + message.payload[i] + `
+            </div>`;
+        }
+
+        // Close content
+        content += "</div>";
+
+        // Set content
+        document.getElementById("index").innerHTML = content;
+    },
     listenError: function(message) {
         asticode.notifier.error(message.payload);
     },
@@ -42,23 +73,23 @@ var index = {
     listenIndexShow: function(message) {
         switch (message.payload) {
             case "index":
-                document.getElementById("index").innerHTML = `Index`;
+                index.sendEmailList();
                 break;
             case "login":
                 document.getElementById("index").innerHTML = `<div class="index-table">
                     <div class="index-cell">
                         <div class="index-form">
-                            <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode == 13) document.getElementById('btn').click()" autofocus>
+                            <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn').click()" autofocus>
                             <button class="btn btn-success btn-lg" id="btn" onclick="index.onClickLogin()">Login</button>
                         </div>
                     </div>
                 </div>`;
                 break;
-            default: // Sign up
+            default:
                 document.getElementById("index").innerHTML = `<div class="index-table">
                     <div class="index-cell">
                         <div class="index-form">
-                            <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode == 13) document.getElementById('btn').click()" autofocus>
+                            <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn').click()" autofocus>
                             <button class="btn btn-success btn-lg" id="btn" onclick="index.onClickSignup()">Sign up</button>
                         </div>
                     </div>
@@ -69,11 +100,33 @@ var index = {
     listenIndexSignedUp: function() {
         index.sendIndexShow();
     },
+    onClickAddEmail: function() {
+        // Build content
+        let content = document.createElement("div");
+        content.innerHTML = `<input type="email" placeholder="Email" id="value-email" onkeypress="if (event.keyCode === 13) document.getElementById('btn').click()">
+        <button class="btn btn-success btn-lg" id="btn" onclick="index.onClickSubmitEmail()">Add</button>`;
+
+        // Update modal
+        asticode.modaler.setContent(content);
+        asticode.modaler.show();
+        document.getElementById("value-email").focus();
+    },
     onClickLogin: function() {
         index.sendIndexLogin(document.getElementById("value-password").value);
     },
     onClickSignup: function() {
         index.sendIndexSignup(document.getElementById("value-password").value);
+    },
+    onClickSubmitEmail: function() {
+        index.sendEmailAdd(document.getElementById("value-email").value);
+    },
+    sendEmailAdd: function(email) {
+        asticode.loader.show();
+        astilectron.send({name: "email.add", payload: email});
+    },
+    sendEmailList: function() {
+        asticode.loader.show();
+        astilectron.send({name: "email.list"});
     },
     sendIndexLogin: function(password) {
         asticode.loader.show();

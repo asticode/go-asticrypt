@@ -10,6 +10,10 @@ import (
 // handleMessages handles messages
 func handleMessages(w *astilectron.Window, m bootstrap.MessageIn) {
 	switch m.Name {
+	case "email.add":
+		handleMessageEmailAdd(w, m)
+	case "email.list":
+		handleMessageEmailList(w)
 	case "index.login":
 		handleMessageIndexLogin(w, m)
 	case "index.show":

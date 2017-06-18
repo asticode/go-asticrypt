@@ -70,6 +70,17 @@ func (p PublicKey) MarshalText() (o []byte, err error) {
 	return
 }
 
+// Scan implements the Scanner interface
+func (p *PublicKey) Scan(value interface{}) (err error) {
+	var b []byte
+	var ok bool
+	if b, ok = value.([]byte); !ok {
+		err = errors.New("value must be []byte")
+		return
+	}
+	return p.UnmarshalText(b)
+}
+
 // UnmarshalText allows PublicKey to implement the TextUnmarshaler interface
 func (p *PublicKey) UnmarshalText(i []byte) (err error) {
 	// Base 64 decode

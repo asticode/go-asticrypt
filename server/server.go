@@ -158,31 +158,57 @@ func handleEncryptedMessages(rw http.ResponseWriter, r *http.Request, p httprout
 		return
 	}
 
+	// Decrypt message
+	var m astimail.BodyMessageIn
+	if m, err = b.Decrypt(u.ServerPrivateKey, u.ClientPublicKey, time.Now()); err != nil {
+		err = errors.Wrap(err, "decrypting message failed")
+		return
+	}
+
 	// Switch on name
-	switch b.Name {
-	case astimail.NameEmailCreate:
-		err = handleEmailCreate(b, u)
+	var data interface{}
+	switch m.Name {
+	case astimail.NameEmailAdd:
+		data, err = handleEmailAdd(m.Payload, u)
 	case astimail.NameEmailFetch:
-		err = handleEmailFetch(b, u)
+		data, err = handleEmailFetch(m.Payload, u)
+	case astimail.NameEmailList:
+		data, err = handleEmailList(u)
 	default:
 		err = errors.New("Unknown b.Name")
 	}
 
 	// Process error
 	if err != nil {
-		astilog.Errorf("%s while handling %s", b.Name)
+		astilog.Errorf("%s while handling %s", err, m.Name)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Build body
+	if b, err = astimail.NewBodyMessage(m.Name, data, u.ServerPrivateKey, u.ServerPrivateKey.Public(), u.ClientPublicKey, time.Now()); err != nil {
+		astilog.Errorf("%s while building message", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Write
+	if err = json.NewEncoder(rw).Encode(b); err != nil {
+		astilog.Errorf("%s while writing", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
-func handleEmailCreate(b astimail.BodyMessage, u *User) (err error) {
-	// Decrypt message
+func handleEmailAdd(payload json.RawMessage, u *User) (data interface{}, err error) {
+	// Unmarshal payload
 	var email string
-	if err = b.Decrypt(&email, u.ServerPrivateKey, u.ClientPublicKey, time.Now()); err != nil {
-		err = errors.Wrap(err, "decrypting message failed")
+	if err = json.Unmarshal(payload, &email); err != nil {
+		err = errors.Wrap(err, "unmarshaling failed")
 		return
 	}
+
+	// TODO Validate email
 
 	// Fetch user based on the email
 	if _, err = storage.UserFetchWithEmail(email); err != nil && err != errNotFound {
@@ -205,14 +231,17 @@ func handleEmailCreate(b astimail.BodyMessage, u *User) (err error) {
 	astilog.Debugf("Token is %s", token)
 
 	// TODO Send validation link
+
+	// Set data
+	data = "An email has been sent to you. Follow the instructions to validate it."
 	return
 }
 
-func handleEmailFetch(b astimail.BodyMessage, u *User) (err error) {
-	// Decrypt message
+func handleEmailFetch(payload json.RawMessage, u *User) (data interface{}, err error) {
+	// Unmarshal payload
 	var email string
-	if err = b.Decrypt(&email, u.ServerPrivateKey, u.ClientPublicKey, time.Now()); err != nil {
-		err = errors.Wrap(err, "decrypting message failed")
+	if err = json.Unmarshal(payload, &email); err != nil {
+		err = errors.Wrap(err, "unmarshaling failed")
 		return
 	}
 
@@ -222,4 +251,20 @@ func handleEmailFetch(b astimail.BodyMessage, u *User) (err error) {
 		return
 	}
 	return
+}
+
+func handleEmailList(u *User) (data interface{}, err error) {
+	// List emails
+	var es []*Email
+	if es, err = storage.EmailList(u); err != nil {
+		err = errors.Wrap(err, "listing email failed")
+		return
+	}
+
+	// Build data
+	var emails = []string{}
+	for _, e := range es {
+		emails = append(emails, e.Addr)
+	}
+	return emails, nil
 }

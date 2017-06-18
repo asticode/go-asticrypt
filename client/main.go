@@ -50,6 +50,7 @@ func main() {
 		AstilectronOptions: astilectron.Options{
 			AppName: "Astimail",
 		},
+		Debug:          true,
 		Homepage:       "index.html",
 		MessageHandler: handleMessages,
 		// RestoreAssets:  RestoreAssets,
@@ -57,7 +58,7 @@ func main() {
 			BackgroundColor: astilectron.PtrStr("#333"),
 			Center:          astilectron.PtrBool(true),
 			Height:          astilectron.PtrInt(720),
-			Width:           astilectron.PtrInt(1280),
+			Width:           astilectron.PtrInt(720),
 		},
 	}); err != nil {
 		astilog.Fatal(errors.Wrap(err, "running bootstrap failed"))

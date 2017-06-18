@@ -3,33 +3,27 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/asticode/go-astilog"
 	"github.com/asticode/go-astimail"
 	"github.com/pkg/errors"
 )
 
-// signup signs up
-func signup(password string) (err error) {
-	// Generate private key
-	var cltPrvKey *astimail.PrivateKey
-	astilog.Debug("Generating new private key")
-	if cltPrvKey, err = astimail.GeneratePrivateKey(password); err != nil {
-		err = errors.Wrap(err, "generating private key failed")
-		return
-	}
-
+// sendHTTPRequest sends an HTTP request
+func sendHTTPRequest(method string, pattern string, in interface{}, out interface{}) (err error) {
 	// Marshal body
 	var b []byte
-	if b, err = json.Marshal(astimail.BodyKey{Key: cltPrvKey.Public()}); err != nil {
+	if b, err = json.Marshal(in); err != nil {
 		err = errors.Wrap(err, "marshaling body failed")
 		return
 	}
 
 	// Create new request
 	var r *http.Request
-	if r, err = http.NewRequest(http.MethodPost, ServerPublicAddr+"/users", bytes.NewReader(b)); err != nil {
+	if r, err = http.NewRequest(method, ServerPublicAddr+pattern, bytes.NewReader(b)); err != nil {
 		err = errors.Wrap(err, "creating http request failed")
 		return
 	}
@@ -45,16 +39,50 @@ func signup(password string) (err error) {
 	defer resp.Body.Close()
 
 	// Unmarshal body
-	var body astimail.BodyKey
-	if err = json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		err = errors.Wrap(err, "unmarshaling body failed")
+	if out != nil {
+		if err = json.NewDecoder(resp.Body).Decode(out); err != nil {
+			err = errors.Wrap(err, "unmarshaling body failed")
+			return
+		}
+	}
+	return
+}
+
+// sendEncryptedHTTPRequest sends an encrypted HTTP request
+func sendEncryptedHTTPRequest(name string, in interface{}, out interface{}) (err error) {
+	// Build body
+	var bout astimail.BodyMessage
+	if bout, err = astimail.NewBodyMessage(name, in, clientPrivateKey, clientPrivateKey.Public(), serverPublicKey, time.Now()); err != nil {
+		err = errors.Wrap(err, "building body failed")
 		return
 	}
 
-	// Set keys
-	clientPrivateKey = &astimail.PrivateKey{}
-	*clientPrivateKey = *cltPrvKey
-	serverPublicKey = &astimail.PublicKey{}
-	*serverPublicKey = *body.Key
+	// Send HTTP request
+	var bin astimail.BodyMessage
+	if err = sendHTTPRequest(http.MethodPost, "/encrypted", bout, &bin); err != nil {
+		err = errors.Wrap(err, "sending HTTP request failed")
+		return
+	}
+
+	// Decrypt body
+	var m astimail.BodyMessageIn
+	if m, err = bin.Decrypt(clientPrivateKey, serverPublicKey, time.Now()); err != nil {
+		err = errors.Wrap(err, "decrypting message failed")
+		return
+	}
+
+	// Validate name
+	if m.Name != name {
+		err = fmt.Errorf("input name %s != message name %s", name, m.Name)
+		return
+	}
+
+	// Unmarshal payload
+	if out != nil {
+		if err = json.Unmarshal(m.Payload, out); err != nil {
+			err = errors.Wrap(err, "unmarshaling payload failed")
+			return
+		}
+	}
 	return
 }

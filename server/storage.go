@@ -26,11 +26,12 @@ type Base struct {
 // Email represents an email
 type Email struct {
 	Base
-	Addr        string         `db:"addr"`
-	ID          int            `db:"id"`
-	Token       string         `db:"token"`
-	UserID      int            `db:"user_id"`
-	ValidatedAt mysql.NullTime `db:"validated_at"`
+	Addr            string         `db:"addr"`
+	ID              int            `db:"id"`
+	Token           string         `db:"token"`
+	UserID          int            `db:"user_id"`
+	ValidatedAt     mysql.NullTime `db:"validated_at"`
+	ValidationToken string         `db:"validation_token"`
 }
 
 // User represents a user
@@ -46,6 +47,7 @@ type User struct {
 type Storage interface {
 	EmailCreate(email string, u *User) (token string, err error)
 	EmailFetchWithValidationToken(token string) (e *Email, err error)
+	EmailList(u *User) (e []*Email, err error)
 	EmailValidate(e *Email) (err error)
 	UserCreate(cltPubKey *astimail.PublicKey, srvPrvKey *astimail.PrivateKey) error
 	UserFetchWithEmail(email string) (*User, error)
@@ -78,6 +80,14 @@ func (s *storageMySQL) EmailFetchWithValidationToken(token string) (e *Email, er
 	if err = s.db.Get(e, "SELECT * FROM email WHERE validation_token = ? AND validated_at IS NULL LIMIT 1", token); err == sql.ErrNoRows {
 		err = errNotFound
 	}
+	return
+}
+
+// EmailList lists the emails of a user
+func (s *storageMySQL) EmailList(u *User) (e []*Email, err error) {
+	astilog.Debug("Listing emails")
+	e = []*Email{}
+	err = s.db.Select(&e, "SELECT * FROM email WHERE user_id = ? AND validated_at IS NOT NULL", u.ID)
 	return
 }
 

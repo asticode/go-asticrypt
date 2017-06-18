@@ -104,6 +104,17 @@ func (p PrivateKey) MarshalText() (o []byte, err error) {
 	return
 }
 
+// Scan implements the Scanner interface
+func (p *PrivateKey) Scan(value interface{}) (err error) {
+	var b []byte
+	var ok bool
+	if b, ok = value.([]byte); !ok {
+		err = errors.New("value must be []byte")
+		return
+	}
+	return p.UnmarshalText(b)
+}
+
 // UnmarshalText allows PrivateKey to implement the TextUnmarshaler interface
 func (p *PrivateKey) UnmarshalText(i []byte) (err error) {
 	// Base 64 decode
