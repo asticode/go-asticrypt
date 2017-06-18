@@ -20,9 +20,8 @@ func TestBodyMessage(t *testing.T) {
 	// Assert
 	b, err := astimail.NewBodyMessage("name", "test", pk1, pk1.Public(), pk2.Public(), time.Now())
 	assert.NoError(t, err)
-	assert.Equal(t, "name", b.Name)
-	var text string
-	err = b.Decrypt(&text, pk2, pk1.Public(), time.Now())
+	m, err := b.Decrypt(pk2, pk1.Public(), time.Now())
 	assert.NoError(t, err)
-	assert.Equal(t, "test", text)
+	assert.Equal(t, "\"test\"", string(m.Payload))
+	assert.Equal(t, "name", m.Name)
 }
