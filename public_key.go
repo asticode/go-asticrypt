@@ -11,7 +11,7 @@ import (
 
 // PublicKey represents a marshalable/unmarshalable public key
 type PublicKey struct {
-	hash   string
+	hash   []byte
 	key    *rsa.PublicKey
 	string string
 }
@@ -39,12 +39,12 @@ func newPublicKey(i interface{}) (k *PublicKey, err error) {
 	// Set hash field
 	var h = sha1.New()
 	h.Write(b)
-	k.hash = string(h.Sum(nil))
+	k.hash = h.Sum(nil)
 	return
 }
 
 // Hash hashes the public key
-func (p PublicKey) Hash() string {
+func (p PublicKey) Hash() []byte {
 	return p.hash
 }
 

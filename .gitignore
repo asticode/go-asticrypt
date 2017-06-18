@@ -1,5 +1,8 @@
 .DS_Store
 Thumbs.db
 .idea/
+client/client
+client/local.toml
+client/vendor
 server/local.toml
 server/server

@@ -1,7 +1,7 @@
 -- create table user
 CREATE TABLE IF NOT EXISTS user (
     id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    client_public_key_hash CHAR(40) NOT NULL,
+    client_public_key_hash BINARY(20) NOT NULL,
     client_public_key TEXT,
     server_private_key TEXT,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

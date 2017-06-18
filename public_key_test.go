@@ -12,5 +12,5 @@ func TestPublicKey(t *testing.T) {
 	err := k.UnmarshalText([]byte(pub1))
 	assert.NoError(t, err)
 	assert.Equal(t, pub1, k.String())
-	assert.Equal(t, "\xc7@\xf5H\xbfS\x132\x85\xf0Z\xec\xb75\xd1\xe9\xe6\x81\b\x0e", k.Hash())
+	assert.Equal(t, []byte{0xc7, 0x40, 0xf5, 0x48, 0xbf, 0x53, 0x13, 0x32, 0x85, 0xf0, 0x5a, 0xec, 0xb7, 0x35, 0xd1, 0xe9, 0xe6, 0x81, 0x8, 0xe}, k.Hash())
 }

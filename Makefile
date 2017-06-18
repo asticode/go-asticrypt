@@ -1,3 +1,11 @@
+client-all: client-build client-run
+
+client-build:
+	go build -o ./client/client ./client
+
+client-run:
+	./client/client -v
+
 server-all: server-build server-init server-migrate server-run
 
 server-build:
