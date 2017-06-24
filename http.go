@@ -13,7 +13,18 @@ const (
 	NameEmailAdd   = "email.add"
 	NameEmailFetch = "email.fetch"
 	NameEmailList  = "email.list"
+	NameError      = "error"
 )
+
+// BodyError is a body containing an error
+type BodyError struct {
+	Label string `json:"label"`
+}
+
+// Error implements the error interface
+func (b BodyError) Error() string {
+	return b.Label
+}
 
 // BodyKey is a body containing a key
 type BodyKey struct {

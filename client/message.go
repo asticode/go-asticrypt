@@ -1,11 +1,10 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron/bootstrap"
 	"github.com/asticode/go-astilog"
+	"github.com/asticode/go-astimail"
 	"github.com/pkg/errors"
 )
 
@@ -33,10 +32,9 @@ type messageError struct {
 
 // update updates the message error
 func (e *messageError) update(err error, devMsg string, userMsg string) {
-	devMsg += " failed"
-	e.err = errors.Wrap(err, devMsg)
-	if userMsg == "" {
-		e.userMsg = strings.Title(devMsg)
+	e.err = errors.Wrap(err, devMsg+" failed")
+	if bodyError, ok := err.(astimail.BodyError); ok {
+		e.userMsg = bodyError.Label
 	} else {
 		e.userMsg = userMsg
 	}

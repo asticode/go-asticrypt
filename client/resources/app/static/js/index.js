@@ -46,19 +46,18 @@ var index = {
     },
     listenEmailListed: function(message) {
         // Init content
-        let content = `<div class="index-list">
-            <div class="index-button">
-                <button class="btn btn-success" onclick="index.onClickAddEmail()">Add a new email</button>
-            </div>`;
+        let content = `<div class="index-header">
+            <button class="btn btn-success" onclick="index.onClickEmailAdd()" style="width: 40px" title="Add a new email">+</button>
+            <button class="btn btn-success" onclick="index.onClickEmailList()" style="width: 40px" title="Refresh emails list"><i class="fa fa-refresh"></i></button>
+        </div>`;
 
         // Loop through emails
+        content += `<div class="index-list">`;
         for (let i = 0; i < message.payload.length; i++) {
             content += `<div class="index-item">
                 ` + message.payload[i] + `
             </div>`;
         }
-
-        // Close content
         content += "</div>";
 
         // Set content
@@ -100,7 +99,7 @@ var index = {
     listenIndexSignedUp: function() {
         index.sendIndexShow();
     },
-    onClickAddEmail: function() {
+    onClickEmailAdd: function() {
         // Build content
         let content = document.createElement("div");
         content.innerHTML = `<input type="email" placeholder="Email" id="value-email" onkeypress="if (event.keyCode === 13) document.getElementById('btn').click()">
@@ -110,6 +109,9 @@ var index = {
         asticode.modaler.setContent(content);
         asticode.modaler.show();
         document.getElementById("value-email").focus();
+    },
+    onClickEmailList: function() {
+        index.sendEmailList();
     },
     onClickLogin: function() {
         index.sendIndexLogin(document.getElementById("value-password").value);

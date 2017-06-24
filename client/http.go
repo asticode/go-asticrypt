@@ -38,6 +38,18 @@ func sendHTTPRequest(method string, pattern string, in interface{}, out interfac
 	astilog.Debug("Request done")
 	defer resp.Body.Close()
 
+	// Process status code
+	if resp.StatusCode != http.StatusOK {
+		// Unmarshal body
+		var bd astimail.BodyError
+		if err = json.NewDecoder(resp.Body).Decode(&bd); err != nil {
+			err = errors.Wrap(err, "unmarshaling body failed")
+			return
+		}
+		err = bd
+		return
+	}
+
 	// Unmarshal body
 	if out != nil {
 		if err = json.NewDecoder(resp.Body).Decode(out); err != nil {
@@ -60,7 +72,9 @@ func sendEncryptedHTTPRequest(name string, in interface{}, out interface{}) (err
 	// Send HTTP request
 	var bin astimail.BodyMessage
 	if err = sendHTTPRequest(http.MethodPost, "/encrypted", bout, &bin); err != nil {
-		err = errors.Wrap(err, "sending HTTP request failed")
+		if _, ok := err.(astimail.BodyError); !ok {
+			err = errors.Wrap(err, "sending HTTP request failed")
+		}
 		return
 	}
 
@@ -71,8 +85,17 @@ func sendEncryptedHTTPRequest(name string, in interface{}, out interface{}) (err
 		return
 	}
 
-	// Validate name
-	if m.Name != name {
+	// Process name
+	if m.Name == astimail.NameError {
+		// Unmarshal payload
+		var bd astimail.BodyError
+		if err = json.Unmarshal(m.Payload, &bd); err != nil {
+			err = errors.Wrap(err, "unmarshaling payload failed")
+			return
+		}
+		err = bd
+		return
+	} else if m.Name != name {
 		err = fmt.Errorf("input name %s != message name %s", name, m.Name)
 		return
 	}

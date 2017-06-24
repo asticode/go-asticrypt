@@ -15,6 +15,7 @@ import (
 // handleMessageIndexShow handles the "index.show" message
 func handleMessageIndexShow(w *astilectron.Window) {
 	// Process errors
+	const defaultUserErrorMsg = "Showing index failed"
 	var msgError = &messageError{}
 	defer processMessageError(w, msgError)
 
@@ -31,7 +32,7 @@ func handleMessageIndexShow(w *astilectron.Window) {
 	// Send
 	var err error
 	if err = w.Send(m); err != nil {
-		msgError.update(err, "sending message", "")
+		msgError.update(err, "sending message", defaultUserErrorMsg)
 		return
 	}
 }
@@ -45,6 +46,7 @@ type Configuration struct {
 // handleMessageIndexSignUp handles the "index.sign.up" message
 func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	// Process errors
+	const defaultUserErrorMsg = "Signing up failed"
 	var msgError = &messageError{}
 	defer processMessageError(w, msgError)
 
@@ -52,7 +54,7 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	var password string
 	var err error
 	if err = json.Unmarshal(m.Payload, &password); err != nil {
-		msgError.update(err, "unmarshaling payload", "")
+		msgError.update(err, "unmarshaling payload", defaultUserErrorMsg)
 		return
 	}
 
@@ -60,14 +62,14 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	var cltPrvKey *astimail.PrivateKey
 	astilog.Debug("Generating new private key")
 	if cltPrvKey, err = astimail.GeneratePrivateKey(password); err != nil {
-		msgError.update(err, "generating private key", "")
+		msgError.update(err, "generating private key", defaultUserErrorMsg)
 		return
 	}
 
 	// Send HTTP request
 	var body astimail.BodyKey
 	if err = sendHTTPRequest(http.MethodPost, "/users", astimail.BodyKey{Key: cltPrvKey.Public()}, &body); err != nil {
-		msgError.update(err, "sending http request", "")
+		msgError.update(err, "sending http request", defaultUserErrorMsg)
 		return
 	}
 
@@ -80,7 +82,7 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	// Create configuration file
 	var f *os.File
 	if f, err = os.Create(pathConfiguration); err != nil {
-		msgError.update(err, "creating configuration file", "")
+		msgError.update(err, "creating configuration file", defaultUserErrorMsg)
 		return
 	}
 	defer f.Close()
@@ -90,13 +92,13 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 		ClientPrivateKey: clientPrivateKey,
 		ServerPublicKey:  serverPublicKey,
 	}); err != nil {
-		msgError.update(err, "creating configuration file", "")
+		msgError.update(err, "creating configuration file", defaultUserErrorMsg)
 		return
 	}
 
 	// Send
 	if err = w.Send(bootstrap.MessageOut{Name: "index.signed.up"}); err != nil {
-		msgError.update(err, "sending message", "")
+		msgError.update(err, "sending message", defaultUserErrorMsg)
 		return
 	}
 }
@@ -104,6 +106,7 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 // handleMessageIndexLogin handles the "index.login" message
 func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	// Process errors
+	const defaultUserErrorMsg = "Logging in failed"
 	var msgError = &messageError{}
 	defer processMessageError(w, msgError)
 
@@ -111,7 +114,7 @@ func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	var password string
 	var err error
 	if err = json.Unmarshal(m.Payload, &password); err != nil {
-		msgError.update(err, "unmarshaling payload", "")
+		msgError.update(err, "unmarshaling payload", defaultUserErrorMsg)
 		return
 	}
 
@@ -119,7 +122,7 @@ func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	var c = Configuration{ClientPrivateKey: &astimail.PrivateKey{}}
 	c.ClientPrivateKey.SetPassphrase(password)
 	if _, err = toml.DecodeFile(pathConfiguration, &c); err != nil {
-		msgError.update(err, "decoding toml file", "")
+		msgError.update(err, "decoding toml file", defaultUserErrorMsg)
 		return
 	}
 
@@ -131,7 +134,7 @@ func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 
 	// Send
 	if err = w.Send(bootstrap.MessageOut{Name: "index.logged.in"}); err != nil {
-		msgError.update(err, "sending message", "")
+		msgError.update(err, "sending message", defaultUserErrorMsg)
 		return
 	}
 }
