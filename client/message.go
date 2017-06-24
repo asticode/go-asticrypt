@@ -33,6 +33,7 @@ type messageError struct {
 
 // update updates the message error
 func (e *messageError) update(err error, devMsg string, userMsg string) {
+	devMsg += " failed"
 	e.err = errors.Wrap(err, devMsg)
 	if userMsg == "" {
 		e.userMsg = strings.Title(devMsg)

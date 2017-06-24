@@ -31,7 +31,7 @@ func handleMessageIndexShow(w *astilectron.Window) {
 	// Send
 	var err error
 	if err = w.Send(m); err != nil {
-		msgError.update(err, "sending message failed", "")
+		msgError.update(err, "sending message", "")
 		return
 	}
 }
@@ -52,7 +52,7 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	var password string
 	var err error
 	if err = json.Unmarshal(m.Payload, &password); err != nil {
-		msgError.update(err, "unmarshaling payload failed", "")
+		msgError.update(err, "unmarshaling payload", "")
 		return
 	}
 
@@ -60,14 +60,14 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	var cltPrvKey *astimail.PrivateKey
 	astilog.Debug("Generating new private key")
 	if cltPrvKey, err = astimail.GeneratePrivateKey(password); err != nil {
-		msgError.update(err, "generating private key failed", "")
+		msgError.update(err, "generating private key", "")
 		return
 	}
 
 	// Send HTTP request
 	var body astimail.BodyKey
 	if err = sendHTTPRequest(http.MethodPost, "/users", astimail.BodyKey{Key: cltPrvKey.Public()}, &body); err != nil {
-		msgError.update(err, "sending http request failed", "")
+		msgError.update(err, "sending http request", "")
 		return
 	}
 
@@ -80,7 +80,7 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	// Create configuration file
 	var f *os.File
 	if f, err = os.Create(pathConfiguration); err != nil {
-		msgError.update(err, "creating configuration file failed", "")
+		msgError.update(err, "creating configuration file", "")
 		return
 	}
 	defer f.Close()
@@ -90,13 +90,13 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 		ClientPrivateKey: clientPrivateKey,
 		ServerPublicKey:  serverPublicKey,
 	}); err != nil {
-		msgError.update(err, "creating configuration file failed", "")
+		msgError.update(err, "creating configuration file", "")
 		return
 	}
 
 	// Send
 	if err = w.Send(bootstrap.MessageOut{Name: "index.signed.up"}); err != nil {
-		msgError.update(err, "sending message failed", "")
+		msgError.update(err, "sending message", "")
 		return
 	}
 }
@@ -111,7 +111,7 @@ func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	var password string
 	var err error
 	if err = json.Unmarshal(m.Payload, &password); err != nil {
-		msgError.update(err, "unmarshaling payload failed", "")
+		msgError.update(err, "unmarshaling payload", "")
 		return
 	}
 
@@ -119,7 +119,7 @@ func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	var c = Configuration{ClientPrivateKey: &astimail.PrivateKey{}}
 	c.ClientPrivateKey.SetPassphrase(password)
 	if _, err = toml.DecodeFile(pathConfiguration, &c); err != nil {
-		msgError.update(err, "decoding toml file failed", "")
+		msgError.update(err, "decoding toml file", "")
 		return
 	}
 
@@ -131,7 +131,7 @@ func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 
 	// Send
 	if err = w.Send(bootstrap.MessageOut{Name: "index.logged.in"}); err != nil {
-		msgError.update(err, "sending message failed", "")
+		msgError.update(err, "sending message", "")
 		return
 	}
 }

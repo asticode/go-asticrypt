@@ -18,20 +18,20 @@ func handleMessageEmailAdd(w *astilectron.Window, m bootstrap.MessageIn) {
 	var email string
 	var err error
 	if err = json.Unmarshal(m.Payload, &email); err != nil {
-		msgError.update(err, "unmarshaling payload failed", "")
+		msgError.update(err, "unmarshaling payload", "")
 		return
 	}
 
 	// Add email
 	var label string
 	if err = sendEncryptedHTTPRequest(astimail.NameEmailAdd, email, &label); err != nil {
-		msgError.update(err, "adding email failed", "")
+		msgError.update(err, "adding email", "")
 		return
 	}
 
 	// Send
 	if err = w.Send(bootstrap.MessageOut{Name: "email.added", Payload: label}); err != nil {
-		msgError.update(err, "sending message failed", "")
+		msgError.update(err, "sending message", "")
 		return
 	}
 }
@@ -46,13 +46,13 @@ func handleMessageEmailList(w *astilectron.Window) {
 	var emails []string
 	var err error
 	if err = sendEncryptedHTTPRequest(astimail.NameEmailList, nil, &emails); err != nil {
-		msgError.update(err, "listing emails failed", "")
+		msgError.update(err, "listing emails", "")
 		return
 	}
 
 	// Send
 	if err = w.Send(bootstrap.MessageOut{Name: "email.listed", Payload: emails}); err != nil {
-		msgError.update(err, "sending message failed", "")
+		msgError.update(err, "sending message", "")
 		return
 	}
 }

@@ -25,27 +25,27 @@ func serve(addr, pathResources string) (err error) {
 
 	// Build router
 	var r = httprouter.New()
-	r.GET("/", adaptHandler(handleHomepage))
-	r.POST("/encrypted", adaptHandler(handleEncryptedMessages))
-	r.POST("/users", adaptHandler(handleCreateUser))
-	r.GET("/validate_email/:token", adaptHandler(handleValidateEmail))
+	r.GET("/", handleHomepage)
+	r.POST("/encrypted", handleEncryptedMessages)
+	r.POST("/users", handleCreateUser)
+	r.GET("/validate_email/:token", handleValidateEmail)
 	r.ServeFiles("/static/*filepath", http.Dir(filepath.Join(pathResources, "static")))
 
 	// Listen
 	astilog.Debugf("Listening on %s", addr)
 	go func() {
-		if err := http.ListenAndServe(addr, r); err != nil {
+		if err := http.ListenAndServe(addr, adaptHandler(r)); err != nil {
 			astilog.Error(err)
 		}
 	}()
 	return
 }
 
-func adaptHandler(h httprouter.Handle) httprouter.Handle {
-	return func(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func adaptHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		astilog.Debugf("handling %s", r.URL.Path)
-		h(rw, r, p)
-	}
+		h.ServeHTTP(rw, r)
+	})
 }
 
 func executeTemplate(rw http.ResponseWriter, name string, data interface{}) {
