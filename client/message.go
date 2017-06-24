@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron/bootstrap"
 	"github.com/asticode/go-astilog"
@@ -23,11 +25,27 @@ func handleMessages(w *astilectron.Window, m bootstrap.MessageIn) {
 	}
 }
 
+// messageError represents a message error
+type messageError struct {
+	err     error
+	userMsg string
+}
+
+// update updates the message error
+func (e *messageError) update(err error, devMsg string, userMsg string) {
+	e.err = errors.Wrap(err, devMsg)
+	if userMsg == "" {
+		e.userMsg = strings.Title(devMsg)
+	} else {
+		e.userMsg = userMsg
+	}
+}
+
 // processMessageError processes the message error
-func processMessageError(w *astilectron.Window, err *error) {
-	if *err != nil {
-		astilog.Error(*err)
-		if errSend := w.Send(bootstrap.MessageOut{Name: "error", Payload: errors.Cause(*err).Error()}); errSend != nil {
+func processMessageError(w *astilectron.Window, msgError *messageError) {
+	if msgError.err != nil {
+		astilog.Error(msgError.err)
+		if errSend := w.Send(bootstrap.MessageOut{Name: "error", Payload: msgError.userMsg}); errSend != nil {
 			astilog.Error("Sending error message failed")
 		}
 	}
