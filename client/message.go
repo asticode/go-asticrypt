@@ -15,6 +15,8 @@ func handleMessages(w *astilectron.Window, m bootstrap.MessageIn) {
 		handleMessageEmailAdd(w, m)
 	case "email.list":
 		handleMessageEmailList(w)
+	case "email.open":
+		handleMessageEmailOpen(w, m)
 	case "index":
 		handleMessageIndex(w)
 	case "login":

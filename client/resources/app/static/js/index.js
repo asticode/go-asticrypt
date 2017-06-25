@@ -24,6 +24,9 @@ var index = {
                 case "email.listed":
                     index.listenEmailListed(message);
                     break;
+                case "email.opened":
+                    index.listenEmailOpened();
+                    break;
                 case "error":
                     index.listenError(message);
                     break;
@@ -58,7 +61,7 @@ var index = {
         // Loop through emails
         content += `<div class="index-list">`;
         for (let i = 0; i < message.payload.length; i++) {
-            content += `<div class="index-item">
+            content += `<div class="index-item" onclick="index.onClickEmailUnlock('` + message.payload[i] + `')">
                 ` + message.payload[i] + `
             </div>`;
         }
@@ -66,6 +69,9 @@ var index = {
 
         // Set content
         document.getElementById("index").innerHTML = content;
+    },
+    listenEmailOpened: function() {
+        document.getElementById("index").innerHTML = "Bite";
     },
     listenError: function(message) {
         asticode.notifier.error(message.payload);
@@ -119,8 +125,22 @@ var index = {
         asticode.modaler.show();
         document.getElementById("value-email").focus();
     },
+    onClickEmailUnlock: function(email) {
+        // Build content
+        let content = document.createElement("div");
+        content.innerHTML = `<input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn-password').click()">
+        <button class="btn btn-success btn-lg" id="btn-password" onclick="index.onClickEmailOpen('` + email + `')">Add</button>`;
+
+        // Update modal
+        asticode.modaler.setContent(content);
+        asticode.modaler.show();
+        document.getElementById("value-password").focus();
+    },
     onClickEmailList: function() {
         index.sendEmailList();
+    },
+    onClickEmailOpen: function(email) {
+        index.sendEmailOpen(email, document.getElementById("value-password").value);
     },
     onClickLogin: function() {
         index.sendLogin(document.getElementById("value-password").value);
@@ -141,6 +161,10 @@ var index = {
     sendEmailList: function() {
         asticode.loader.show();
         astilectron.send({name: "email.list"});
+    },
+    sendEmailOpen: function(email, password) {
+        asticode.loader.show();
+        astilectron.send({name: "email.open", payload: {email: email, password: password}});
     },
     sendIndex: function() {
         asticode.loader.show();

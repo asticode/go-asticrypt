@@ -16,6 +16,7 @@ import (
 // Vars
 var (
 	clientPrivateKey  *astimail.PrivateKey
+	emails            = make(map[string]string)
 	httpClient        = &http.Client{}
 	pathConfiguration string
 	pathExecutable    string
@@ -50,6 +51,7 @@ func main() {
 		AstilectronOptions: astilectron.Options{
 			AppName: "Astimail",
 		},
+		Debug:          true,
 		Homepage:       "index.html",
 		MessageHandler: handleMessages,
 		// RestoreAssets:  RestoreAssets,
