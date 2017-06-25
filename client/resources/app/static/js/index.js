@@ -79,21 +79,23 @@ var index = {
                 document.getElementById("index").innerHTML = `<div class="index-table">
                     <div class="index-cell">
                         <div class="index-form">
-                            <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn').click()" autofocus>
-                            <button class="btn btn-success btn-lg" id="btn" onclick="index.onClickLogin()">Login</button>
+                            <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn-login').click()">
+                            <button class="btn btn-success btn-lg" id="btn-login" onclick="index.onClickLogin()">Login</button>
                         </div>
                     </div>
                 </div>`;
+                document.getElementById("value-password").focus();
                 break;
             default:
                 document.getElementById("index").innerHTML = `<div class="index-table">
                     <div class="index-cell">
                         <div class="index-form">
-                            <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn').click()" autofocus>
-                            <button class="btn btn-success btn-lg" id="btn" onclick="index.onClickSignUp()">Sign up</button>
+                            <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn-signup').click()">
+                            <button class="btn btn-success btn-lg" id="btn-signup" onclick="index.onClickSignUp()">Sign up</button>
                         </div>
                     </div>
                 </div>`;
+                document.getElementById("value-password").focus();
                 break;
         }
     },
@@ -109,8 +111,8 @@ var index = {
     onClickEmailAdd: function() {
         // Build content
         let content = document.createElement("div");
-        content.innerHTML = `<input type="email" placeholder="Email" id="value-email" onkeypress="if (event.keyCode === 13) document.getElementById('btn').click()">
-        <button class="btn btn-success btn-lg" id="btn" onclick="index.onClickSubmitEmail()">Add</button>`;
+        content.innerHTML = `<input type="email" placeholder="Email" id="value-email" onkeypress="if (event.keyCode === 13) document.getElementById('btn-email').click()">
+        <button class="btn btn-success btn-lg" id="btn-email" onclick="index.onClickSubmitEmail()">Add</button>`;
 
         // Update modal
         asticode.modaler.setContent(content);

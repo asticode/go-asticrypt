@@ -272,7 +272,7 @@ func handleEmailAdd(payload json.RawMessage, u *User) (data interface{}, userErr
 	// TODO Send validation link
 
 	// Set data
-	data = "An email has been sent to you containing instructions to follow"
+	data = "An email has been sent to you containing instructions to validate your email"
 	return
 }
 
