@@ -199,6 +199,7 @@ func handleEncryptedMessages(rw http.ResponseWriter, r *http.Request, p httprout
 	}
 
 	// Switch on name
+	astilog.Debugf("m.Name is %s", m.Name)
 	var data interface{}
 	switch m.Name {
 	case astimail.NameEmailAdd:
@@ -207,6 +208,8 @@ func handleEncryptedMessages(rw http.ResponseWriter, r *http.Request, p httprout
 		data, userErrorMsg, err = handleEmailFetch(m.Payload, u)
 	case astimail.NameEmailList:
 		data, userErrorMsg, err = handleEmailList(u)
+	case astimail.NameReferences:
+		data, userErrorMsg, err = handleReferences()
 	default:
 		err = errors.New("Unknown b.Name")
 	}
@@ -312,5 +315,16 @@ func handleEmailList(u *User) (data interface{}, userErrorMsg string, err error)
 		emails = append(emails, e.Addr)
 	}
 	data = emails
+	return
+}
+
+func handleReferences() (data interface{}, userErrorMsg string, err error) {
+	// Init
+	userErrorMsg = "Getting references failed"
+
+	// Build data
+	data = astimail.BodyReferences{
+		Now: time.Now(),
+	}
 	return
 }

@@ -14,7 +14,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-var channelQuit = make(chan bool)
+var (
+	channelQuit   = make(chan bool)
+	configuration Configuration
+)
 
 func main() {
 	// Parse flags
@@ -22,15 +25,15 @@ func main() {
 	flag.Parse()
 
 	// Build configuration
-	var c = newConfiguration()
+	configuration = newConfiguration()
 
 	// Build logger
-	astilog.SetLogger(astilog.New(c.Logger))
+	astilog.SetLogger(astilog.New(configuration.Logger))
 
 	// Build db
 	var db *sqlx.DB
 	var err error
-	if db, err = astimysql.New(c.MySQL); err != nil {
+	if db, err = astimysql.New(configuration.MySQL); err != nil {
 		astilog.Fatalf("%s while creating db", err)
 	}
 
@@ -52,7 +55,7 @@ func main() {
 		astilog.Info("db-init successful")
 	case "db-migrate", "db-rollback":
 		// Load patches
-		if err = p.Load(c.Patcher); err != nil {
+		if err = p.Load(configuration.Patcher); err != nil {
 			astilog.Fatal(err)
 		}
 
@@ -69,7 +72,7 @@ func main() {
 		astilog.Infof("%s successful", s)
 	default:
 		// Serve
-		if err := serve(c.AddrLocal, c.PathResources); err != nil {
+		if err := serve(configuration.AddrLocal, configuration.PathResources); err != nil {
 			astilog.Fatalf("%s while serving", err)
 		}
 

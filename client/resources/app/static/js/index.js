@@ -60,9 +60,9 @@ var index = {
 
         // Loop through emails
         content += `<div class="index-list">`;
-        for (let i = 0; i < message.payload.length; i++) {
-            content += `<div class="index-item" onclick="index.onClickEmailUnlock('` + message.payload[i] + `')">
-                ` + message.payload[i] + `
+        for (let i = 0; i < message.payload.emails.length; i++) {
+            content += `<div class="index-item" onclick="index.onClickEmailUnlock('` + message.payload.emails[i] + `')">
+                ` + message.payload.emails[i] + `
             </div>`;
         }
         content += "</div>";

@@ -10,6 +10,7 @@ import (
 	"github.com/asticode/go-astilectron/bootstrap"
 	"github.com/asticode/go-astilog"
 	"github.com/asticode/go-astimail"
+	"github.com/pkg/errors"
 )
 
 // handleMessageIndex handles the "index" message
@@ -35,6 +36,20 @@ func handleMessageIndex(w *astilectron.Window) {
 		msgError.update(err, "sending message", defaultUserErrorMsg)
 		return
 	}
+}
+
+// fetchReferences fetches references
+func fetchReferences() (err error) {
+	// Fetch references
+	var body astimail.BodyReferences
+	if err = sendEncryptedHTTPRequest(astimail.NameReferences, nil, &body); err != nil {
+		err = errors.Wrap(err, "sending encrypted http request failed")
+		return
+	}
+
+	// Update references
+	now = body.Now
+	return
 }
 
 // Configuration represents a configuration
@@ -96,6 +111,12 @@ func handleMessageSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 		return
 	}
 
+	// Fetch references
+	if err = fetchReferences(); err != nil {
+		msgError.update(err, "fetching references", defaultUserErrorMsg)
+		return
+	}
+
 	// Send
 	if err = w.Send(bootstrap.MessageOut{Name: "signed.up"}); err != nil {
 		msgError.update(err, "sending message", defaultUserErrorMsg)
@@ -131,6 +152,12 @@ func handleMessageLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	*clientPrivateKey = *c.ClientPrivateKey
 	serverPublicKey = &astimail.PublicKey{}
 	*serverPublicKey = *c.ServerPublicKey
+
+	// Fetch references
+	if err = fetchReferences(); err != nil {
+		msgError.update(err, "fetching references", defaultUserErrorMsg)
+		return
+	}
 
 	// Send
 	if err = w.Send(bootstrap.MessageOut{Name: "logged.in"}); err != nil {

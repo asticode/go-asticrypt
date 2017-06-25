@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"time"
+
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron/bootstrap"
 	"github.com/asticode/go-astilog"
@@ -18,6 +20,7 @@ var (
 	clientPrivateKey  *astimail.PrivateKey
 	emails            = make(map[string]string)
 	httpClient        = &http.Client{}
+	now               time.Time
 	pathConfiguration string
 	pathExecutable    string
 	serverPublicKey   *astimail.PublicKey

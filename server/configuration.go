@@ -13,20 +13,24 @@ import (
 
 // Flags
 var (
-	addrLocal     = flag.String("l", "", "the local addr")
-	addrPublic    = flag.String("p", "", "the public addr")
-	configPath    = flag.String("c", "", "the config path")
-	pathResources = flag.String("r", "", "the resources path")
+	addrLocal          = flag.String("l", "", "the local addr")
+	addrPublic         = flag.String("p", "", "the public addr")
+	configPath         = flag.String("c", "", "the config path")
+	googleClientID     = flag.String("gci", "", "the google client id")
+	googleClientSecret = flag.String("gcs", "", "the google client secret")
+	pathResources      = flag.String("r", "", "the resources path")
 )
 
 // Configuration represents a configuration
 type Configuration struct {
-	AddrLocal     string                  `toml:"addr_local"`
-	AddrPublic    string                  `toml:"addr_public"`
-	Logger        astilog.Configuration   `toml:"logger"`
-	MySQL         astimysql.Configuration `toml:"mysql"`
-	Patcher       astipatch.Configuration `toml:"patcher"`
-	PathResources string                  `toml:"path_resources"`
+	AddrLocal          string                  `toml:"addr_local"`
+	AddrPublic         string                  `toml:"addr_public"`
+	GoogleClientID     string                  `toml:"google_client_id"`
+	GoogleClientSecret string                  `toml:"google_client_secret"`
+	Logger             astilog.Configuration   `toml:"logger"`
+	MySQL              astimysql.Configuration `toml:"mysql"`
+	Patcher            astipatch.Configuration `toml:"patcher"`
+	PathResources      string                  `toml:"path_resources"`
 }
 
 // newConfiguration creates a new configuration object
@@ -48,12 +52,14 @@ func newConfiguration() (c Configuration) {
 
 	// Flag config
 	c = Configuration{
-		AddrLocal:     *addrLocal,
-		AddrPublic:    *addrPublic,
-		Logger:        astilog.FlagConfig(),
-		MySQL:         astimysql.FlagConfig(),
-		Patcher:       astipatch.FlagConfig(),
-		PathResources: *pathResources,
+		AddrLocal:          *addrLocal,
+		AddrPublic:         *addrPublic,
+		GoogleClientID:     *googleClientID,
+		GoogleClientSecret: *googleClientSecret,
+		Logger:             astilog.FlagConfig(),
+		MySQL:              astimysql.FlagConfig(),
+		Patcher:            astipatch.FlagConfig(),
+		PathResources:      *pathResources,
 	}
 
 	// Merge configs

@@ -55,8 +55,15 @@ func handleMessageEmailList(w *astilectron.Window) {
 		return
 	}
 
+	// Get google auth URL
+	var googleAuthURL string
+
 	// Send
-	if err = w.Send(bootstrap.MessageOut{Name: "email.listed", Payload: emails}); err != nil {
+	type BodyOut struct {
+		Emails        []string `json:"emails"`
+		GoogleAuthURL string   `json:"google_auth_url"`
+	}
+	if err = w.Send(bootstrap.MessageOut{Name: "email.listed", Payload: BodyOut{Emails: emails, GoogleAuthURL: googleAuthURL}}); err != nil {
 		msgError.update(err, "sending message", defaultUserErrorMsg)
 		return
 	}

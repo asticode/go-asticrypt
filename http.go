@@ -14,6 +14,7 @@ const (
 	NameEmailFetch = "email.fetch"
 	NameEmailList  = "email.list"
 	NameError      = "error"
+	NameReferences = "references"
 )
 
 // BodyError is a body containing an error
@@ -77,4 +78,9 @@ func (b *BodyMessage) Decrypt(prvSrc *PrivateKey, pubDst *PublicKey, now time.Ti
 		return
 	}
 	return
+}
+
+// BodyReferences represents a body containing references
+type BodyReferences struct {
+	Now time.Time `json:"now"`
 }
