@@ -12,15 +12,15 @@ import (
 	"github.com/asticode/go-astimail"
 )
 
-// handleMessageIndexShow handles the "index.show" message
-func handleMessageIndexShow(w *astilectron.Window) {
+// handleMessageIndex handles the "index" message
+func handleMessageIndex(w *astilectron.Window) {
 	// Process errors
 	const defaultUserErrorMsg = "Showing index failed"
 	var msgError = &messageError{}
 	defer processMessageError(w, msgError)
 
 	// Build message
-	var m = bootstrap.MessageOut{Name: "index.show"}
+	var m = bootstrap.MessageOut{Name: "indexed"}
 	if _, errStat := os.Stat(pathConfiguration); errStat != nil {
 		m.Payload = "signup"
 	} else if clientPrivateKey == nil || serverPublicKey == nil {
@@ -43,8 +43,8 @@ type Configuration struct {
 	ServerPublicKey  *astimail.PublicKey  `toml:"server_public_key"`
 }
 
-// handleMessageIndexSignUp handles the "index.sign.up" message
-func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
+// handleMessageSignUp handles the "sign.up" message
+func handleMessageSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	// Process errors
 	const defaultUserErrorMsg = "Signing up failed"
 	var msgError = &messageError{}
@@ -97,14 +97,14 @@ func handleMessageIndexSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	}
 
 	// Send
-	if err = w.Send(bootstrap.MessageOut{Name: "index.signed.up"}); err != nil {
+	if err = w.Send(bootstrap.MessageOut{Name: "signed.up"}); err != nil {
 		msgError.update(err, "sending message", defaultUserErrorMsg)
 		return
 	}
 }
 
-// handleMessageIndexLogin handles the "index.login" message
-func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
+// handleMessageLogin handles the "login" message
+func handleMessageLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	// Process errors
 	const defaultUserErrorMsg = "Logging in failed"
 	var msgError = &messageError{}
@@ -133,7 +133,26 @@ func handleMessageIndexLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	*serverPublicKey = *c.ServerPublicKey
 
 	// Send
-	if err = w.Send(bootstrap.MessageOut{Name: "index.logged.in"}); err != nil {
+	if err = w.Send(bootstrap.MessageOut{Name: "logged.in"}); err != nil {
+		msgError.update(err, "sending message", defaultUserErrorMsg)
+		return
+	}
+}
+
+// handleMessageLogout handles the "logout" message
+func handleMessageLogout(w *astilectron.Window) {
+	// Process errors
+	const defaultUserErrorMsg = "Logging out failed"
+	var msgError = &messageError{}
+	defer processMessageError(w, msgError)
+
+	// Set keys
+	clientPrivateKey = nil
+	serverPublicKey = nil
+
+	// Send
+	var err error
+	if err = w.Send(bootstrap.MessageOut{Name: "logged.out"}); err != nil {
 		msgError.update(err, "sending message", defaultUserErrorMsg)
 		return
 	}

@@ -15,12 +15,14 @@ func handleMessages(w *astilectron.Window, m bootstrap.MessageIn) {
 		handleMessageEmailAdd(w, m)
 	case "email.list":
 		handleMessageEmailList(w)
-	case "index.login":
-		handleMessageIndexLogin(w, m)
-	case "index.show":
-		handleMessageIndexShow(w)
-	case "index.sign.up":
-		handleMessageIndexSignUp(w, m)
+	case "index":
+		handleMessageIndex(w)
+	case "login":
+		handleMessageLogin(w, m)
+	case "logout":
+		handleMessageLogout(w)
+	case "sign.up":
+		handleMessageSignUp(w, m)
 	}
 }
 

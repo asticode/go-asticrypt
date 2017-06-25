@@ -27,6 +27,10 @@
     text-align: right;
 }
 
+.index-header button {
+    width: 40px;
+}
+
 .index-list {
     padding: 20px;
     width: 100%;

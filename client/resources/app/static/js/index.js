@@ -10,8 +10,8 @@ var index = {
             // Listen
             index.listen();
 
-            // Send index.show
-            index.sendIndexShow();
+            // Send index
+            index.sendIndex();
         })
     },
     listen: function() {
@@ -27,14 +27,17 @@ var index = {
                 case "error":
                     index.listenError(message);
                     break;
-                case "index.logged.in":
-                    index.listenIndexLoggedIn();
+                case "indexed":
+                    index.listenIndexed(message);
                     break;
-                case "index.show":
-                    index.listenIndexShow(message);
+                case "logged.in":
+                    index.listenLoggedIn();
                     break;
-                case "index.signed.up":
-                    index.listenIndexSignedUp();
+                case "logged.out":
+                    index.listenLoggedOut();
+                    break;
+                case "signed.up":
+                    index.listenSignedUp();
                     break;
             }
         });
@@ -47,8 +50,9 @@ var index = {
     listenEmailListed: function(message) {
         // Init content
         let content = `<div class="index-header">
-            <button class="btn btn-success" onclick="index.onClickEmailAdd()" style="width: 40px" title="Add a new email">+</button>
-            <button class="btn btn-success" onclick="index.onClickEmailList()" style="width: 40px" title="Refresh emails list"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-success" onclick="index.onClickEmailAdd()" title="Add a new email"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-success" onclick="index.onClickEmailList()" title="Refresh emails list"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-success" onclick="index.onClickLogout()" title="Log out"><i class="fa fa-sign-out"></i></button>
         </div>`;
 
         // Loop through emails
@@ -66,10 +70,7 @@ var index = {
     listenError: function(message) {
         asticode.notifier.error(message.payload);
     },
-    listenIndexLoggedIn: function() {
-        index.sendIndexShow();
-    },
-    listenIndexShow: function(message) {
+    listenIndexed: function(message) {
         switch (message.payload) {
             case "index":
                 index.sendEmailList();
@@ -89,15 +90,21 @@ var index = {
                     <div class="index-cell">
                         <div class="index-form">
                             <input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn').click()" autofocus>
-                            <button class="btn btn-success btn-lg" id="btn" onclick="index.onClickSignup()">Sign up</button>
+                            <button class="btn btn-success btn-lg" id="btn" onclick="index.onClickSignUp()">Sign up</button>
                         </div>
                     </div>
                 </div>`;
                 break;
         }
     },
-    listenIndexSignedUp: function() {
-        index.sendIndexShow();
+    listenLoggedIn: function() {
+        index.sendIndex();
+    },
+    listenLoggedOut: function() {
+        index.sendIndex();
+    },
+    listenSignedUp: function() {
+        index.sendIndex();
     },
     onClickEmailAdd: function() {
         // Build content
@@ -114,10 +121,13 @@ var index = {
         index.sendEmailList();
     },
     onClickLogin: function() {
-        index.sendIndexLogin(document.getElementById("value-password").value);
+        index.sendLogin(document.getElementById("value-password").value);
     },
-    onClickSignup: function() {
-        index.sendIndexSignup(document.getElementById("value-password").value);
+    onClickLogout: function() {
+        index.sendLogout();
+    },
+    onClickSignUp: function() {
+        index.sendSignUp(document.getElementById("value-password").value);
     },
     onClickSubmitEmail: function() {
         index.sendEmailAdd(document.getElementById("value-email").value);
@@ -130,16 +140,20 @@ var index = {
         asticode.loader.show();
         astilectron.send({name: "email.list"});
     },
-    sendIndexLogin: function(password) {
+    sendIndex: function() {
         asticode.loader.show();
-        astilectron.send({name: "index.login", payload: password});
+        astilectron.send({name: "index"});
     },
-    sendIndexShow: function() {
+    sendLogin: function(password) {
         asticode.loader.show();
-        astilectron.send({name: "index.show"});
+        astilectron.send({name: "login", payload: password});
     },
-    sendIndexSignup: function(password) {
+    sendLogout: function(password) {
         asticode.loader.show();
-        astilectron.send({name: "index.sign.up", payload: password});
+        astilectron.send({name: "logout"});
+    },
+    sendSignUp: function(password) {
+        asticode.loader.show();
+        astilectron.send({name: "sign.up", payload: password});
     }
 };
