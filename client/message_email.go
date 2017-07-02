@@ -5,6 +5,8 @@ import (
 
 	"crypto/tls"
 
+	"fmt"
+
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron/bootstrap"
 	"github.com/asticode/go-astimail"
@@ -48,22 +50,25 @@ func handleMessageEmailList(w *astilectron.Window) {
 	defer processMessageError(w, msgError)
 
 	// List emails
-	var emails []string
+	var es []string
 	var err error
-	if err = sendEncryptedHTTPRequest(astimail.NameEmailList, nil, &emails); err != nil {
+	if err = sendEncryptedHTTPRequest(astimail.NameEmailList, nil, &es); err != nil {
 		msgError.update(err, "listing emails", defaultUserErrorMsg)
 		return
 	}
 
-	// Get google auth URL
-	var googleAuthURL string
+	// Build emails
+	type Email struct {
+		Addr    string `json:"addr"`
+		AuthURL string `json:"auth_url"`
+	}
+	var emails []Email
+	for _, e := range es {
+		emails = append(emails, Email{Addr: e, AuthURL: fmt.Sprintf("%s/oauth/google?email=%s", ServerPublicAddr, e)})
+	}
 
 	// Send
-	type BodyOut struct {
-		Emails        []string `json:"emails"`
-		GoogleAuthURL string   `json:"google_auth_url"`
-	}
-	if err = w.Send(bootstrap.MessageOut{Name: "email.listed", Payload: BodyOut{Emails: emails, GoogleAuthURL: googleAuthURL}}); err != nil {
+	if err = w.Send(bootstrap.MessageOut{Name: "email.listed", Payload: emails}); err != nil {
 		msgError.update(err, "sending message", defaultUserErrorMsg)
 		return
 	}

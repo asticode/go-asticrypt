@@ -60,10 +60,10 @@ var index = {
 
         // Loop through emails
         content += `<div class="index-list">`;
-        for (let i = 0; i < message.payload.emails.length; i++) {
-            content += `<div class="index-item" onclick="index.onClickEmailUnlock('` + message.payload.emails[i] + `')">
-                ` + message.payload.emails[i] + `
-            </div>`;
+        for (let i = 0; i < message.payload.length; i++) {
+            content += `<a href="` + message.payload[i].auth_url + `" target="_blank"><div class="index-item">
+                ` + message.payload[i].addr + `
+            </div></a>`;
         }
         content += "</div>";
 
@@ -125,16 +125,14 @@ var index = {
         asticode.modaler.show();
         document.getElementById("value-email").focus();
     },
-    onClickEmailUnlock: function(email) {
+    onClickEmailUnlock: function(email, auth_url) {
         // Build content
-        let content = document.createElement("div");
-        content.innerHTML = `<input type="password" placeholder="Password" id="value-password" onkeypress="if (event.keyCode === 13) document.getElementById('btn-password').click()">
-        <button class="btn btn-success btn-lg" id="btn-password" onclick="index.onClickEmailOpen('` + email + `')">Add</button>`;
+        let content = document.createElement("iframe");
+        content.src = auth_url;
 
         // Update modal
         asticode.modaler.setContent(content);
         asticode.modaler.show();
-        document.getElementById("value-password").focus();
     },
     onClickEmailList: function() {
         index.sendEmailList();

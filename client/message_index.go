@@ -48,6 +48,8 @@ func fetchReferences() (err error) {
 	}
 
 	// Update references
+	googleClientID = body.GoogleClientID
+	googleClientSecret = body.GoogleClientSecret
 	now = body.Now
 	return
 }

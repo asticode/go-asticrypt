@@ -17,15 +17,17 @@ import (
 
 // Vars
 var (
-	clientPrivateKey  *astimail.PrivateKey
-	emails            = make(map[string]string)
-	httpClient        = &http.Client{}
-	now               time.Time
-	pathConfiguration string
-	pathExecutable    string
-	serverPublicKey   *astimail.PublicKey
-	ServerPublicAddr  string
-	Version           string
+	clientPrivateKey   *astimail.PrivateKey
+	emails             = make(map[string]string)
+	httpClient         = &http.Client{}
+	googleClientID     string
+	googleClientSecret string
+	now                time.Time
+	pathConfiguration  string
+	pathExecutable     string
+	serverPublicKey    *astimail.PublicKey
+	ServerPublicAddr   string
+	Version            string
 )
 
 //go:generate go-bindata -pkg $GOPACKAGE -o resources.go resources/...

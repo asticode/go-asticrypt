@@ -82,5 +82,7 @@ func (b *BodyMessage) Decrypt(prvSrc *PrivateKey, pubDst *PublicKey, now time.Ti
 
 // BodyReferences represents a body containing references
 type BodyReferences struct {
-	Now time.Time `json:"now"`
+	GoogleClientID     string    `json:"google_client_id"`
+	GoogleClientSecret string    `json:"google_client_secret"`
+	Now                time.Time `json:"now"`
 }

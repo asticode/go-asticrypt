@@ -15,6 +15,8 @@ import (
 	"github.com/asticode/go-astitools/template"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 var templates *template.Template
@@ -30,6 +32,7 @@ func serve(addr, pathResources string) (err error) {
 
 	// HTML
 	r.GET("/", handleHomepage)
+	r.GET("/oauth/:provider", handleOAuth)
 	r.GET("/validate_email/:token", handleValidateEmail)
 	r.ServeFiles("/static/*filepath", http.Dir(filepath.Join(pathResources, "static")))
 
@@ -79,6 +82,33 @@ func executeTemplate(rw http.ResponseWriter, name string, data interface{}) {
 
 func handleHomepage(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	executeTemplate(rw, "/index.html", nil)
+}
+
+func handleOAuth(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	// Init
+	const defaultUserErrorMsg = "OAuth failed"
+
+	// Build auth URL
+	var provider, authURL = p.ByName("provider"), ""
+	switch provider {
+	case "google":
+		// Build config
+		var config = &oauth2.Config{
+			ClientID:     configuration.GoogleClientID,
+			ClientSecret: configuration.GoogleClientSecret,
+			Endpoint:     google.Endpoint,
+			RedirectURL:  "file://bite",
+			Scopes:       []string{"https://mail.google.com"},
+		}
+		// TODO Use a legit state
+		authURL = config.AuthCodeURL("state")
+	default:
+		handleErrorHTML(rw, fmt.Errorf("Invalid provider %s", provider), "building auth url", defaultUserErrorMsg)
+		return
+	}
+
+	// Redirect
+	http.Redirect(rw, r, authURL, http.StatusFound)
 }
 
 func handleValidateEmail(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -324,7 +354,9 @@ func handleReferences() (data interface{}, userErrorMsg string, err error) {
 
 	// Build data
 	data = astimail.BodyReferences{
-		Now: time.Now(),
+		GoogleClientID:     configuration.GoogleClientID,
+		GoogleClientSecret: configuration.GoogleClientSecret,
+		Now:                time.Now(),
 	}
 	return
 }
