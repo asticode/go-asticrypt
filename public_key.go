@@ -1,4 +1,4 @@
-package astimail
+package asticrypt
 
 import (
 	"crypto/rsa"

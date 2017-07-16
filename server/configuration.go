@@ -38,7 +38,7 @@ func newConfiguration() (c Configuration) {
 	// Global config
 	var gc = Configuration{
 		Logger: astilog.Configuration{
-			AppName: "go-astimail-server",
+			AppName: "go-asticrypt-server",
 		},
 	}
 

@@ -1,4 +1,4 @@
-package astimail
+package asticrypt
 
 import (
 	"encoding/json"
@@ -10,11 +10,11 @@ import (
 
 // Body names
 const (
-	NameEmailAdd   = "email.add"
-	NameEmailFetch = "email.fetch"
-	NameEmailList  = "email.list"
-	NameError      = "error"
-	NameReferences = "references"
+	NameAccountAdd   = "account.add"
+	NameAccountFetch = "account.fetch"
+	NameAccountList  = "account.list"
+	NameError        = "error"
+	NameReferences   = "references"
 )
 
 // BodyError is a body containing an error

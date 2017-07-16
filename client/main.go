@@ -8,24 +8,24 @@ import (
 
 	"time"
 
+	"github.com/asticode/go-asticrypt"
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron/bootstrap"
 	"github.com/asticode/go-astilog"
-	"github.com/asticode/go-astimail"
 	"github.com/pkg/errors"
 )
 
 // Vars
 var (
-	clientPrivateKey   *astimail.PrivateKey
-	emails             = make(map[string]string)
+	clientPrivateKey   *asticrypt.PrivateKey
+	accounts           = make(map[string]string)
 	httpClient         = &http.Client{}
 	googleClientID     string
 	googleClientSecret string
 	now                time.Time
 	pathConfiguration  string
 	pathExecutable     string
-	serverPublicKey    *astimail.PublicKey
+	serverPublicKey    *asticrypt.PublicKey
 	ServerPublicAddr   string
 	Version            string
 )
@@ -54,7 +54,7 @@ func main() {
 	// Run bootstrap
 	if err = bootstrap.Run(bootstrap.Options{
 		AstilectronOptions: astilectron.Options{
-			AppName: "Astimail",
+			AppName: "Asticrypt",
 		},
 		Debug:          true,
 		Homepage:       "index.html",

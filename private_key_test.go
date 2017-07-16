@@ -1,14 +1,14 @@
-package astimail_test
+package asticrypt_test
 
 import (
 	"testing"
 
-	"github.com/asticode/go-astimail"
+	"github.com/asticode/go-asticrypt"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPrivateKey(t *testing.T) {
-	var k = &astimail.PrivateKey{}
+	var k = &asticrypt.PrivateKey{}
 	k.SetPassphrase("test")
 	err := k.UnmarshalText([]byte(prv1))
 	assert.NoError(t, err)

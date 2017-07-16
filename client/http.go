@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/asticode/go-asticrypt"
 	"github.com/asticode/go-astilog"
-	"github.com/asticode/go-astimail"
 	"github.com/pkg/errors"
 )
 
@@ -41,7 +41,7 @@ func sendHTTPRequest(method string, pattern string, in interface{}, out interfac
 	// Process status code
 	if resp.StatusCode != http.StatusOK {
 		// Unmarshal body
-		var bd astimail.BodyError
+		var bd asticrypt.BodyError
 		if err = json.NewDecoder(resp.Body).Decode(&bd); err != nil {
 			err = errors.Wrap(err, "unmarshaling body failed")
 			return
@@ -63,32 +63,32 @@ func sendHTTPRequest(method string, pattern string, in interface{}, out interfac
 // sendEncryptedHTTPRequest sends an encrypted HTTP request
 func sendEncryptedHTTPRequest(name string, in interface{}, out interface{}) (err error) {
 	// Build body
-	var bout astimail.BodyMessage
-	if bout, err = astimail.NewBodyMessage(name, in, clientPrivateKey, clientPrivateKey.Public(), serverPublicKey, time.Now()); err != nil {
+	var bout asticrypt.BodyMessage
+	if bout, err = asticrypt.NewBodyMessage(name, in, clientPrivateKey, clientPrivateKey.Public(), serverPublicKey, time.Now()); err != nil {
 		err = errors.Wrap(err, "building body failed")
 		return
 	}
 
 	// Send HTTP request
-	var bin astimail.BodyMessage
+	var bin asticrypt.BodyMessage
 	if err = sendHTTPRequest(http.MethodPost, "/encrypted", bout, &bin); err != nil {
-		if _, ok := err.(astimail.BodyError); !ok {
+		if _, ok := err.(asticrypt.BodyError); !ok {
 			err = errors.Wrap(err, "sending HTTP request failed")
 		}
 		return
 	}
 
 	// Decrypt body
-	var m astimail.BodyMessageIn
+	var m asticrypt.BodyMessageIn
 	if m, err = bin.Decrypt(clientPrivateKey, serverPublicKey, time.Now()); err != nil {
 		err = errors.Wrap(err, "decrypting message failed")
 		return
 	}
 
 	// Process name
-	if m.Name == astimail.NameError {
+	if m.Name == asticrypt.NameError {
 		// Unmarshal payload
-		var bd astimail.BodyError
+		var bd asticrypt.BodyError
 		if err = json.Unmarshal(m.Payload, &bd); err != nil {
 			err = errors.Wrap(err, "unmarshaling payload failed")
 			return

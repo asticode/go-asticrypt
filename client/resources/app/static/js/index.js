@@ -18,14 +18,14 @@ var index = {
         astilectron.listen(function(message) {
             asticode.loader.hide();
             switch (message.name) {
-                case "email.added":
-                    index.listenEmailAdded(message);
+                case "account.added":
+                    index.listenAccountAdded(message);
                     break;
-                case "email.listed":
-                    index.listenEmailListed(message);
+                case "account.listed":
+                    index.listenAccountListed(message);
                     break;
-                case "email.opened":
-                    index.listenEmailOpened();
+                case "account.opened":
+                    index.listenAccountOpened();
                     break;
                 case "error":
                     index.listenError(message);
@@ -45,20 +45,20 @@ var index = {
             }
         });
     },
-    listenEmailAdded: function(message) {
+    listenAccountAdded: function(message) {
         asticode.modaler.hide();
         asticode.notifier.success(message.payload);
-        index.sendEmailList();
+        index.sendAccountList();
     },
-    listenEmailListed: function(message) {
+    listenAccountListed: function(message) {
         // Init content
         let content = `<div class="index-header">
-            <button class="btn btn-success" onclick="index.onClickEmailAdd()" title="Add a new email"><i class="fa fa-plus"></i></button>
-            <button class="btn btn-success" onclick="index.onClickEmailList()" title="Refresh emails list"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-success" onclick="index.onClickAccountAdd()" title="Add a new account"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-success" onclick="index.onClickAccountList()" title="Refresh accounts list"><i class="fa fa-refresh"></i></button>
             <button class="btn btn-success" onclick="index.onClickLogout()" title="Log out"><i class="fa fa-sign-out"></i></button>
         </div>`;
 
-        // Loop through emails
+        // Loop through accounts
         content += `<div class="index-list">`;
         for (let i = 0; i < message.payload.length; i++) {
             content += `<a href="` + message.payload[i].auth_url + `" target="_blank"><div class="index-item">
@@ -70,7 +70,7 @@ var index = {
         // Set content
         document.getElementById("index").innerHTML = content;
     },
-    listenEmailOpened: function() {
+    listenAccountOpened: function() {
         document.getElementById("index").innerHTML = "Bite";
     },
     listenError: function(message) {
@@ -79,7 +79,7 @@ var index = {
     listenIndexed: function(message) {
         switch (message.payload) {
             case "index":
-                index.sendEmailList();
+                index.sendAccountList();
                 break;
             case "login":
                 document.getElementById("index").innerHTML = `<div class="index-table">
@@ -114,18 +114,18 @@ var index = {
     listenSignedUp: function() {
         index.sendIndex();
     },
-    onClickEmailAdd: function() {
+    onClickAccountAdd: function() {
         // Build content
         let content = document.createElement("div");
-        content.innerHTML = `<input type="email" placeholder="Email" id="value-email" onkeypress="if (event.keyCode === 13) document.getElementById('btn-email').click()">
-        <button class="btn btn-success btn-lg" id="btn-email" onclick="index.onClickSubmitEmail()">Add</button>`;
+        content.innerHTML = `<input type="account" placeholder="Account" id="value-account" onkeypress="if (event.keyCode === 13) document.getElementById('btn-account').click()">
+        <button class="btn btn-success btn-lg" id="btn-account" onclick="index.onClickSubmitAccount()">Add</button>`;
 
         // Update modal
         asticode.modaler.setContent(content);
         asticode.modaler.show();
-        document.getElementById("value-email").focus();
+        document.getElementById("value-account").focus();
     },
-    onClickEmailUnlock: function(email, auth_url) {
+    onClickAccountUnlock: function(account, auth_url) {
         // Build content
         let content = document.createElement("iframe");
         content.src = auth_url;
@@ -134,11 +134,11 @@ var index = {
         asticode.modaler.setContent(content);
         asticode.modaler.show();
     },
-    onClickEmailList: function() {
-        index.sendEmailList();
+    onClickAccountList: function() {
+        index.sendAccountList();
     },
-    onClickEmailOpen: function(email) {
-        index.sendEmailOpen(email, document.getElementById("value-password").value);
+    onClickAccountOpen: function(account) {
+        index.sendAccountOpen(account, document.getElementById("value-password").value);
     },
     onClickLogin: function() {
         index.sendLogin(document.getElementById("value-password").value);
@@ -149,20 +149,20 @@ var index = {
     onClickSignUp: function() {
         index.sendSignUp(document.getElementById("value-password").value);
     },
-    onClickSubmitEmail: function() {
-        index.sendEmailAdd(document.getElementById("value-email").value);
+    onClickSubmitAccount: function() {
+        index.sendAccountAdd(document.getElementById("value-account").value);
     },
-    sendEmailAdd: function(email) {
+    sendAccountAdd: function(account) {
         asticode.loader.show();
-        astilectron.send({name: "email.add", payload: email});
+        astilectron.send({name: "account.add", payload: account});
     },
-    sendEmailList: function() {
+    sendAccountList: function() {
         asticode.loader.show();
-        astilectron.send({name: "email.list"});
+        astilectron.send({name: "account.list"});
     },
-    sendEmailOpen: function(email, password) {
+    sendAccountOpen: function(account, password) {
         asticode.loader.show();
-        astilectron.send({name: "email.open", payload: {email: email, password: password}});
+        astilectron.send({name: "account.open", payload: {account: account, password: password}});
     },
     sendIndex: function() {
         asticode.loader.show();

@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/asticode/go-asticrypt"
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron/bootstrap"
 	"github.com/asticode/go-astilog"
-	"github.com/asticode/go-astimail"
 	"github.com/pkg/errors"
 )
 
@@ -41,8 +41,8 @@ func handleMessageIndex(w *astilectron.Window) {
 // fetchReferences fetches references
 func fetchReferences() (err error) {
 	// Fetch references
-	var body astimail.BodyReferences
-	if err = sendEncryptedHTTPRequest(astimail.NameReferences, nil, &body); err != nil {
+	var body asticrypt.BodyReferences
+	if err = sendEncryptedHTTPRequest(asticrypt.NameReferences, nil, &body); err != nil {
 		err = errors.Wrap(err, "sending encrypted http request failed")
 		return
 	}
@@ -56,8 +56,8 @@ func fetchReferences() (err error) {
 
 // Configuration represents a configuration
 type Configuration struct {
-	ClientPrivateKey *astimail.PrivateKey `toml:"client_private_key"`
-	ServerPublicKey  *astimail.PublicKey  `toml:"server_public_key"`
+	ClientPrivateKey *asticrypt.PrivateKey `toml:"client_private_key"`
+	ServerPublicKey  *asticrypt.PublicKey  `toml:"server_public_key"`
 }
 
 // handleMessageSignUp handles the "sign.up" message
@@ -76,24 +76,24 @@ func handleMessageSignUp(w *astilectron.Window, m bootstrap.MessageIn) {
 	}
 
 	// Generate private key
-	var cltPrvKey *astimail.PrivateKey
+	var cltPrvKey *asticrypt.PrivateKey
 	astilog.Debug("Generating new private key")
-	if cltPrvKey, err = astimail.GeneratePrivateKey(password); err != nil {
+	if cltPrvKey, err = asticrypt.GeneratePrivateKey(password); err != nil {
 		msgError.update(err, "generating private key", defaultUserErrorMsg)
 		return
 	}
 
 	// Send HTTP request
-	var body astimail.BodyKey
-	if err = sendHTTPRequest(http.MethodPost, "/users", astimail.BodyKey{Key: cltPrvKey.Public()}, &body); err != nil {
+	var body asticrypt.BodyKey
+	if err = sendHTTPRequest(http.MethodPost, "/users", asticrypt.BodyKey{Key: cltPrvKey.Public()}, &body); err != nil {
 		msgError.update(err, "sending http request", defaultUserErrorMsg)
 		return
 	}
 
 	// Set keys
-	clientPrivateKey = &astimail.PrivateKey{}
+	clientPrivateKey = &asticrypt.PrivateKey{}
 	*clientPrivateKey = *cltPrvKey
-	serverPublicKey = &astimail.PublicKey{}
+	serverPublicKey = &asticrypt.PublicKey{}
 	*serverPublicKey = *body.Key
 
 	// Create configuration file
@@ -142,7 +142,7 @@ func handleMessageLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	}
 
 	// Parse configuration
-	var c = Configuration{ClientPrivateKey: &astimail.PrivateKey{}}
+	var c = Configuration{ClientPrivateKey: &asticrypt.PrivateKey{}}
 	c.ClientPrivateKey.SetPassphrase(password)
 	if _, err = toml.DecodeFile(pathConfiguration, &c); err != nil {
 		msgError.update(err, "decoding toml file", defaultUserErrorMsg)
@@ -150,9 +150,9 @@ func handleMessageLogin(w *astilectron.Window, m bootstrap.MessageIn) {
 	}
 
 	// Set keys
-	clientPrivateKey = &astimail.PrivateKey{}
+	clientPrivateKey = &asticrypt.PrivateKey{}
 	*clientPrivateKey = *c.ClientPrivateKey
-	serverPublicKey = &astimail.PublicKey{}
+	serverPublicKey = &asticrypt.PublicKey{}
 	*serverPublicKey = *c.ServerPublicKey
 
 	// Fetch references

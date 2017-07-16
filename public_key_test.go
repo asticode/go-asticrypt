@@ -1,14 +1,14 @@
-package astimail_test
+package asticrypt_test
 
 import (
 	"testing"
 
-	"github.com/asticode/go-astimail"
+	"github.com/asticode/go-asticrypt"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPublicKey(t *testing.T) {
-	var k = &astimail.PublicKey{}
+	var k = &asticrypt.PublicKey{}
 	err := k.UnmarshalText([]byte(pub1))
 	assert.NoError(t, err)
 	assert.Equal(t, pub1, k.String())

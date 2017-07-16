@@ -1,22 +1,22 @@
 package main
 
 import (
+	"github.com/asticode/go-asticrypt"
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron/bootstrap"
 	"github.com/asticode/go-astilog"
-	"github.com/asticode/go-astimail"
 	"github.com/pkg/errors"
 )
 
 // handleMessages handles messages
 func handleMessages(w *astilectron.Window, m bootstrap.MessageIn) {
 	switch m.Name {
-	case "email.add":
-		handleMessageEmailAdd(w, m)
-	case "email.list":
-		handleMessageEmailList(w)
-	case "email.open":
-		handleMessageEmailOpen(w, m)
+	case "account.add":
+		handleMessageAccountAdd(w, m)
+	case "account.list":
+		handleMessageAccountList(w)
+	case "account.open":
+		handleMessageAccountOpen(w, m)
 	case "index":
 		handleMessageIndex(w)
 	case "login":
@@ -37,7 +37,7 @@ type messageError struct {
 // update updates the message error
 func (e *messageError) update(err error, devMsg string, userMsg string) {
 	e.err = errors.Wrap(err, devMsg+" failed")
-	if bodyError, ok := err.(astimail.BodyError); ok {
+	if bodyError, ok := err.(asticrypt.BodyError); ok {
 		e.userMsg = bodyError.Label
 	} else {
 		e.userMsg = userMsg

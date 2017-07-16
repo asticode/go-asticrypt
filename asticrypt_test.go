@@ -1,4 +1,4 @@
-package astimail_test
+package asticrypt_test
 
 // Vars
 var (

@@ -9,9 +9,8 @@ import (
 
 	"fmt"
 
-	"github.com/asaskevich/govalidator"
+	"github.com/asticode/go-asticrypt"
 	"github.com/asticode/go-astilog"
-	"github.com/asticode/go-astimail"
 	"github.com/asticode/go-astitools/template"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -32,8 +31,7 @@ func serve(addr, pathResources string) (err error) {
 
 	// HTML
 	r.GET("/", handleHomepage)
-	r.GET("/oauth/:provider", handleOAuth)
-	r.GET("/validate_email/:token", handleValidateEmail)
+	r.GET("/oauth/:provider/redirect", handleOAuthRedirect)
 	r.ServeFiles("/static/*filepath", http.Dir(filepath.Join(pathResources, "static")))
 
 	// JSON
@@ -61,7 +59,7 @@ func adaptHandler(h http.Handler) http.Handler {
 
 func handleErrorHTML(rw http.ResponseWriter, err error, msgDev, msgUser string) {
 	astilog.Error(errors.Wrap(err, msgDev+" failed"))
-	executeTemplate(rw, "/error.html", astimail.BodyError{Label: msgUser})
+	executeTemplate(rw, "/error.html", asticrypt.BodyError{Label: msgUser})
 }
 
 func executeTemplate(rw http.ResponseWriter, name string, data interface{}) {
@@ -84,7 +82,7 @@ func handleHomepage(rw http.ResponseWriter, r *http.Request, p httprouter.Params
 	executeTemplate(rw, "/index.html", nil)
 }
 
-func handleOAuth(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func handleOAuthRedirect(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Init
 	const defaultUserErrorMsg = "OAuth failed"
 
@@ -111,32 +109,10 @@ func handleOAuth(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	http.Redirect(rw, r, authURL, http.StatusFound)
 }
 
-func handleValidateEmail(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// Init
-	const defaultUserErrorMsg = "Validating email failed"
-
-	// Fetch email
-	var e *Email
-	var err error
-	if e, err = storage.EmailFetchWithValidationToken(p.ByName("token")); err != nil {
-		handleErrorHTML(rw, err, "fetching email", defaultUserErrorMsg)
-		return
-	}
-
-	// Validate email
-	if err = storage.EmailValidate(e); err != nil {
-		handleErrorHTML(rw, err, "validating email", defaultUserErrorMsg)
-		return
-	}
-
-	// Execute template
-	executeTemplate(rw, "/email_validated.html", nil)
-}
-
 func handleErrorJSON(rw http.ResponseWriter, code int, err error, msgDev, msgUser string) {
 	rw.WriteHeader(code)
 	astilog.Error(errors.Wrap(err, msgDev+" failed"))
-	if errWrite := json.NewEncoder(rw).Encode(astimail.BodyError{Label: msgUser}); errWrite != nil {
+	if errWrite := json.NewEncoder(rw).Encode(asticrypt.BodyError{Label: msgUser}); errWrite != nil {
 		astilog.Errorf("%s while writing", errWrite)
 	}
 }
@@ -146,7 +122,7 @@ func handleCreateUser(rw http.ResponseWriter, r *http.Request, p httprouter.Para
 	const defaultUserErrorMsg = "Creating user failed"
 
 	// Decode body
-	var b astimail.BodyKey
+	var b asticrypt.BodyKey
 	var err error
 	if err = json.NewDecoder(r.Body).Decode(&b); err != nil {
 		handleErrorJSON(rw, http.StatusInternalServerError, err, "decoding body", defaultUserErrorMsg)
@@ -156,8 +132,8 @@ func handleCreateUser(rw http.ResponseWriter, r *http.Request, p httprouter.Para
 	// Generate server private key
 	// TODO Use passphrase?
 	astilog.Debugf("Generating new private key")
-	var srvPrvKey *astimail.PrivateKey
-	if srvPrvKey, err = astimail.GeneratePrivateKey(""); err != nil {
+	var srvPrvKey *asticrypt.PrivateKey
+	if srvPrvKey, err = asticrypt.GeneratePrivateKey(""); err != nil {
 		handleErrorJSON(rw, http.StatusInternalServerError, err, "generating server private key", defaultUserErrorMsg)
 		return
 	}
@@ -178,7 +154,7 @@ func handleCreateUser(rw http.ResponseWriter, r *http.Request, p httprouter.Para
 	}
 
 	// Write
-	if err = json.NewEncoder(rw).Encode(astimail.BodyKey{Key: srvPrvKey.Public()}); err != nil {
+	if err = json.NewEncoder(rw).Encode(asticrypt.BodyKey{Key: srvPrvKey.Public()}); err != nil {
 		handleErrorJSON(rw, http.StatusInternalServerError, err, "writing", defaultUserErrorMsg)
 		return
 	}
@@ -189,8 +165,8 @@ func handleErrorEncrypted(rw http.ResponseWriter, u *User, err error, msgDev, ms
 	astilog.Error(errors.Wrap(err, msgDev+" failed"))
 
 	// Build body
-	var b astimail.BodyMessage
-	if b, err = astimail.NewBodyMessage(astimail.NameError, astimail.BodyError{Label: msgUser}, u.ServerPrivateKey, u.ServerPrivateKey.Public(), u.ClientPublicKey, time.Now()); err != nil {
+	var b asticrypt.BodyMessage
+	if b, err = asticrypt.NewBodyMessage(asticrypt.NameError, asticrypt.BodyError{Label: msgUser}, u.ServerPrivateKey, u.ServerPrivateKey.Public(), u.ClientPublicKey, time.Now()); err != nil {
 		handleErrorJSON(rw, http.StatusInternalServerError, err, "building body", msgUser)
 		return
 	}
@@ -207,7 +183,7 @@ func handleEncryptedMessages(rw http.ResponseWriter, r *http.Request, p httprout
 	var userErrorMsg = "Communicating with server failed"
 
 	// Decode body
-	var b astimail.BodyMessage
+	var b asticrypt.BodyMessage
 	var err error
 	if err = json.NewDecoder(r.Body).Decode(&b); err != nil {
 		handleErrorJSON(rw, http.StatusInternalServerError, err, "decoding body", userErrorMsg)
@@ -222,7 +198,7 @@ func handleEncryptedMessages(rw http.ResponseWriter, r *http.Request, p httprout
 	}
 
 	// Decrypt message
-	var m astimail.BodyMessageIn
+	var m asticrypt.BodyMessageIn
 	if m, err = b.Decrypt(u.ServerPrivateKey, u.ClientPublicKey, time.Now()); err != nil {
 		handleErrorEncrypted(rw, u, err, "decrypting message", userErrorMsg)
 		return
@@ -232,13 +208,13 @@ func handleEncryptedMessages(rw http.ResponseWriter, r *http.Request, p httprout
 	astilog.Debugf("m.Name is %s", m.Name)
 	var data interface{}
 	switch m.Name {
-	case astimail.NameEmailAdd:
-		data, userErrorMsg, err = handleEmailAdd(m.Payload, u)
-	case astimail.NameEmailFetch:
-		data, userErrorMsg, err = handleEmailFetch(m.Payload, u)
-	case astimail.NameEmailList:
-		data, userErrorMsg, err = handleEmailList(u)
-	case astimail.NameReferences:
+	case asticrypt.NameAccountAdd:
+		data, userErrorMsg, err = handleAccountAdd(m.Payload, u)
+	case asticrypt.NameAccountFetch:
+		data, userErrorMsg, err = handleAccountFetch(m.Payload, u)
+	case asticrypt.NameAccountList:
+		data, userErrorMsg, err = handleAccountList(u)
+	case asticrypt.NameReferences:
 		data, userErrorMsg, err = handleReferences()
 	default:
 		err = errors.New("Unknown b.Name")
@@ -251,7 +227,7 @@ func handleEncryptedMessages(rw http.ResponseWriter, r *http.Request, p httprout
 	}
 
 	// Build body
-	if b, err = astimail.NewBodyMessage(m.Name, data, u.ServerPrivateKey, u.ServerPrivateKey.Public(), u.ClientPublicKey, time.Now()); err != nil {
+	if b, err = asticrypt.NewBodyMessage(m.Name, data, u.ServerPrivateKey, u.ServerPrivateKey.Public(), u.ClientPublicKey, time.Now()); err != nil {
 		handleErrorEncrypted(rw, u, err, "building body", userErrorMsg)
 		return
 	}
@@ -263,41 +239,34 @@ func handleEncryptedMessages(rw http.ResponseWriter, r *http.Request, p httprout
 	}
 }
 
-func handleEmailAdd(payload json.RawMessage, u *User) (data interface{}, userErrorMsg string, err error) {
+func handleAccountAdd(payload json.RawMessage, u *User) (data interface{}, userErrorMsg string, err error) {
 	// Init
-	userErrorMsg = "Adding email failed"
+	userErrorMsg = "Adding account failed"
 
 	// Unmarshal payload
-	var email string
-	if err = json.Unmarshal(payload, &email); err != nil {
+	var account string
+	if err = json.Unmarshal(payload, &account); err != nil {
 		err = errors.Wrap(err, "unmarshaling failed")
 		return
 	}
 
-	// Validate email
-	if !govalidator.IsEmail(email) {
-		userErrorMsg = "Email is invalid"
-		err = fmt.Errorf("validating email %s failed", email)
+	// Fetch user based on the account
+	if _, err = storage.UserFetchWithAccount(account); err != nil && err != errNotFound {
+		err = errors.Wrap(err, "fetching account failed")
 		return
 	}
 
-	// Fetch user based on the email
-	if _, err = storage.UserFetchWithEmail(email); err != nil && err != errNotFound {
-		err = errors.Wrap(err, "fetching email failed")
-		return
-	}
-
-	// Email already exists
+	// Account already exists
 	if err == nil {
-		userErrorMsg = "Email is already associated to a user"
-		err = errors.New("Email already exists")
+		userErrorMsg = "Account is already associated to a user"
+		err = errors.New("Account already exists")
 		return
 	}
 
-	// Create email
+	// Create account
 	var token string
-	if token, err = storage.EmailCreate(email, u); err != nil {
-		err = errors.Wrap(err, "creating email failed")
+	if token, err = storage.AccountCreate(account, u); err != nil {
+		err = errors.Wrap(err, "creating account failed")
 		return
 	}
 	astilog.Debugf("Token is %s", token)
@@ -305,46 +274,46 @@ func handleEmailAdd(payload json.RawMessage, u *User) (data interface{}, userErr
 	// TODO Send validation link
 
 	// Set data
-	data = "An email has been sent to you containing instructions to validate your email"
+	data = "An account has been sent to you containing instructions to validate your account"
 	return
 }
 
-func handleEmailFetch(payload json.RawMessage, u *User) (data interface{}, userErrorMsg string, err error) {
+func handleAccountFetch(payload json.RawMessage, u *User) (data interface{}, userErrorMsg string, err error) {
 	// Init
-	userErrorMsg = "Fetching email failed"
+	userErrorMsg = "Fetching account failed"
 
 	// Unmarshal payload
-	var email string
-	if err = json.Unmarshal(payload, &email); err != nil {
+	var account string
+	if err = json.Unmarshal(payload, &account); err != nil {
 		err = errors.Wrap(err, "unmarshaling failed")
 		return
 	}
 
-	// Fetch user based on the email
-	if _, err = storage.UserFetchWithEmail(email); err != nil && err != errNotFound {
-		err = errors.Wrap(err, "fetching email failed")
+	// Fetch user based on the account
+	if _, err = storage.UserFetchWithAccount(account); err != nil && err != errNotFound {
+		err = errors.Wrap(err, "fetching account failed")
 		return
 	}
 	return
 }
 
-func handleEmailList(u *User) (data interface{}, userErrorMsg string, err error) {
+func handleAccountList(u *User) (data interface{}, userErrorMsg string, err error) {
 	// Init
-	userErrorMsg = "Listing emails failed"
+	userErrorMsg = "Listing accounts failed"
 
-	// List emails
-	var es []*Email
-	if es, err = storage.EmailList(u); err != nil {
-		err = errors.Wrap(err, "listing email failed")
+	// List accounts
+	var es []*Account
+	if es, err = storage.AccountList(u); err != nil {
+		err = errors.Wrap(err, "listing account failed")
 		return
 	}
 
 	// Build data
-	var emails = []string{}
+	var accounts = []string{}
 	for _, e := range es {
-		emails = append(emails, e.Addr)
+		accounts = append(accounts, e.Addr)
 	}
-	data = emails
+	data = accounts
 	return
 }
 
@@ -353,7 +322,7 @@ func handleReferences() (data interface{}, userErrorMsg string, err error) {
 	userErrorMsg = "Getting references failed"
 
 	// Build data
-	data = astimail.BodyReferences{
+	data = asticrypt.BodyReferences{
 		GoogleClientID:     configuration.GoogleClientID,
 		GoogleClientSecret: configuration.GoogleClientSecret,
 		Now:                time.Now(),
